@@ -1,6 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="colorPrimary">#ffc600</color>
+    <color name="colorPrimaryDark">#CEA100</color>
+    <color name="colorAccent">#4c4c4c</color>
+    <color name="bg">#f3f3f2</color>
+    <color name="colorWhite">#FFFFFF</color>
+    <color name="colorLogoBlack">#242122</color>
+    <color name="colorBlack">#000000</color>
+    <color name="grisGooglePlay">#5f6368</color>
+    <color name="colorYellowDark">#ECAE00</color>
+    <color name="colorTransparent">#00000000</color>
+    <color name="colorGreen2">#0f9d58</color>
+    <color name="colorRed">#EE153F</color>
+    <color name="colorGris2">#f0f0f0</color>
+    <color name="colorAbreviationBarColor">#181717</color>
+    <color name="secundaryTextColor">#e4e4e4</color>
+    <color name="colorHover">#30818181</color>
+
+    <color name="dot_dark_screen1">#CEA100</color>
+    <color name="dot_dark_screen2">#CEA100</color>
+    <color name="dot_dark_screen3">#36b879</color>
+    <color name="dot_dark_screen4">#4b83c0</color>
+
+    <color name="dot_light_screen1">#ffc600</color>
+    <color name="dot_light_screen2">#ffc600</color>
+    <color name="dot_light_screen3">#5cdb9d</color>
+    <color name="dot_light_screen4">#92c6fe</color>
+    <color name="white">#FFFFFF</color>
+
+    <array name="array_dot_active">
+        <item>@color/dot_light_screen1</item>
+        <item>@color/dot_light_screen2</item>
+        <item>@color/dot_light_screen3</item>
+        <item>@color/dot_light_screen4</item>
+    </array>
+
+    <array name="array_dot_inactive">
+        <item>@color/dot_dark_screen1</item>
+        <item>@color/dot_dark_screen2</item>
+        <item>@color/dot_dark_screen3</item>
+        <item>@color/dot_dark_screen4</item>
+    </array>
 </resources>

@@ -10,4 +10,6 @@
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
+    <string name="internet_permission_title">Autorisation Accées</string>
+    <string name="internet_permission_message">Veillez autoriser les accées pour  l\'application</string>
 </resources>
