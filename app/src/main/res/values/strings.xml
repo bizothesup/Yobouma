@@ -14,4 +14,7 @@
     <string name="internet_permission_message">Veillez autoriser les accées pour  l\'application</string>
     <string name="next">SUIVANT</string>
     <string name="skip">PASSER</string>
+    <string name="phone">Téléphone</string>
+    <string name="info_login">Veillez renseigner votre numero Téléphone</string>
+    <string name="welcom">Bonjour, Bienvenu</string>
 </resources>

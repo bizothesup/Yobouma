@@ -1,5 +1,6 @@
 package net.mbs.ybma
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -82,7 +83,7 @@ class SlideWelcomActivity : AppCompatActivity() {
 
     private fun gotoLoginScreen() {
         prefManager!!.setFirstTimeLaunch2(false);
-        //startActivity(Intent(this, LoginActivity::class.java));
+        startActivity(Intent(this, LoginActivity::class.java));
         finish();
     }
 

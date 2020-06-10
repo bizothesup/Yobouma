@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1039673567073",
+    "firebase_url": "https://yobouma-bea34.firebaseio.com",
+    "project_id": "yobouma-bea34",
+    "storage_bucket": "yobouma-bea34.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1039673567073:android:f28cd0bef34640b4c64720",
+        "android_client_info": {
+          "package_name": "net.mbs.ybma"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1039673567073-1gp800nhpaobcuj12gi0b8dprcl2im8s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAenFC_pFU8OdEnPnrG87hYLyccgtpvk2Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1039673567073-1gp800nhpaobcuj12gi0b8dprcl2im8s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
