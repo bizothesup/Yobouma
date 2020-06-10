@@ -13,11 +13,24 @@ import androidx.appcompat.app.AlertDialog
 import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.*
+import com.google.gson.JsonObject
+import io.reactivex.Scheduler
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_login.*
+import net.mbs.ybma.commons.HelperUrl
 import net.mbs.ybma.commons.PrefManager
+import net.mbs.ybma.commons.SessionUser
+import net.mbs.ybma.models.User
 import net.mbs.ybma.retrofit.IUserClients
 import net.mbs.ybma.retrofit.RetrofitAppClient
+import net.mbs.ybma.retrofit.response.UserResponse
 import net.mbs.ybma.utils.CustomDialog
+import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.concurrent.TimeUnit
 
 class LoginActivity : AppCompatActivity() {
@@ -31,7 +44,9 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var mverificationId: String
     private lateinit var timer: CountDownTimer
     lateinit var userClients: IUserClients
+    private var compositeDisposable: CompositeDisposable? = CompositeDisposable()
     var prefManager: PrefManager? = null
+    var numWithCode: String? = null
 
 
     override fun onResume() {
@@ -44,6 +59,10 @@ class LoginActivity : AppCompatActivity() {
 
     }
 
+    override fun onStop() {
+        super.onStop()
+        compositeDisposable!!.clear()
+    }
 
     fun launchHomeScreen() {
         CustomDialog.progressDialog(this).dismiss()
@@ -55,8 +74,8 @@ class LoginActivity : AppCompatActivity() {
 
     fun launchResgisterScreen() {
         CustomDialog.progressDialog(this).dismiss()
-        // val intent = Intent(this@LoginActivity, InscriptionActivity::class.java)
-        // intent.putExtra("phone", nowithCode)
+         //val intent = Intent(this@LoginActivity, InscriptionActivity::class.java)
+         intent.putExtra("phone", numWithCode)
         startActivity(intent)
     }
 
@@ -73,7 +92,7 @@ class LoginActivity : AppCompatActivity() {
         phoneNumberAuthCallbackListener()
 
         //init retrofit
-        userClients= RetrofitAppClient.getInstance().create(IUserClients::class.java)
+        userClients = RetrofitAppClient.getInstance().create(IUserClients::class.java)
 
     }
 
@@ -86,7 +105,7 @@ class LoginActivity : AppCompatActivity() {
         //envoi du numero
         send_otp.setOnClickListener {
             progressBar_login.visibility = View.VISIBLE
-            val numWithCode = "+" + ccp.selectedCountryCode + input_phone!!.text.toString()
+            numWithCode = "+" + ccp.selectedCountryCode + input_phone!!.text.toString()
             startPhoneNumberVerification(numWithCode!!)
             starTimer()
         }
@@ -146,7 +165,7 @@ class LoginActivity : AppCompatActivity() {
                     input_otp.setText("")
                     progressBar_login!!.visibility = View.VISIBLE
                     // checkUserfromFirebase(firebaseAuth.currentUser!!.phoneNumber)
-                    AsyncTask.execute { login() }
+                        login()
                 } else {
                     Log.w(TAG, "signInWithCredential:echoué", task.exception)
                     if (task.exception is FirebaseAuthInvalidCredentialsException) {
@@ -192,6 +211,66 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun login() {
-        TODO("Not yet implemented")
+        progressBar_login!!.visibility = View.GONE
+        CustomDialog.progressDialog(this@LoginActivity).show()
+
+        //request Login
+        val userLogin = userClients.userLogin(key = HelperUrl.KEY, phone = numWithCode!!)
+        userLogin.enqueue(object: Callback<UserResponse>{
+            override fun onFailure(call: Call<UserResponse>, t: Throwable) {
+                Log.d("",t.message)
+            }
+
+            override fun onResponse(call: Call<UserResponse>, response: Response<UserResponse>) {
+                //Etat=1 successs save profile redirect Home
+                //Etat=2 No found redirect to register save profile redirect Home
+                //Etat=3 No active
+                //Etat=0 Erre Request 500
+
+               val userReponse = response.body()
+                if(userReponse!!.etat.equals("1")){
+                    Log.d("TAGLogin",response!!.body()!!.user.toString())
+                    var user = User()
+                    user =userReponse.user!!
+                    
+                    saveProfile(user)
+                    
+                }else if(userReponse.equals("2")){
+                    launchResgisterScreen()
+                }
+                else if(userReponse.equals("3")) {
+
+                }else{
+
+                }
+            }
+
+
+        })
+
+    }
+
+    private fun saveProfile(user: User) {
+        SessionUser.setNom(user.nom, this@LoginActivity);
+        SessionUser.setPrenom(user.prenom, this@LoginActivity);
+        SessionUser.setPhone(user.phone, this@LoginActivity);
+        SessionUser.setEmail(user.email, this@LoginActivity);
+        SessionUser.setID(user.id, this@LoginActivity);
+        SessionUser.setlogintype(user.login_type, this@LoginActivity);
+        SessionUser.setUserName(user.nom + " " + user.prenom, this@LoginActivity);
+        SessionUser.setUserCategorie(user.user_cat, this@LoginActivity);
+        SessionUser.setCurrency(user.country, this@LoginActivity);
+        SessionUser.setPhoto(user.phone, this@LoginActivity);
+        SessionUser.setCountry(user.country, this@LoginActivity);
+
+        if (user.tonotify.equals("yes")) {
+            SessionUser.setPushNotification(true, this@LoginActivity)
+        } else {
+            SessionUser.setPushNotification(false, this@LoginActivity)
+        }
     }
 }
+
+
+
+
