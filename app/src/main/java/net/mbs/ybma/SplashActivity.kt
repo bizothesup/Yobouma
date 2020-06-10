@@ -41,7 +41,7 @@ class SplashActivity : AppCompatActivity() {
         //notification bar transparent
         HelperCommon.changeColor(window)
         prefManager= PrefManager(this)
-        handler=Handler()
+        handler= Handler()
         checkInternet()
 
 
@@ -80,17 +80,17 @@ class SplashActivity : AppCompatActivity() {
                         .setTitle(R.string.internet_permission_title)
                         .setMessage(R.string.internet_permission_message)
                         .setNegativeButton(
-                            android.R.string.cancel,
-                            DialogInterface.OnClickListener { dialog, which ->
-                                dialog.dismiss();
-                                p1?.cancelPermissionRequest()
-                            })
+                            android.R.string.cancel
+                        ) { dialog, which ->
+                            dialog.dismiss();
+                            p1?.cancelPermissionRequest()
+                        }
                         .setPositiveButton(
-                            android.R.string.ok,
-                            DialogInterface.OnClickListener { dialog, which ->
-                                dialog.dismiss()
-                                p1?.continuePermissionRequest()
-                            }).show()
+                            android.R.string.ok
+                        ) { dialog, which ->
+                            dialog.dismiss()
+                            p1?.continuePermissionRequest()
+                        }.show()
                 }
 
             } ).check()
@@ -104,7 +104,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun goToSlideWelcomeScreen() {
-        //startActivity(Intent(this, SlideWelcomActivity::class.java))
+        startActivity(Intent(this, SlideWelcomActivity::class.java))
         finish()
     }
 
