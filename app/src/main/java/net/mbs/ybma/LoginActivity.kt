@@ -1,6 +1,7 @@
 package net.mbs.ybma
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -45,8 +46,7 @@ class LoginActivity : AppCompatActivity() {
     fun launchHomeScreen() {
         CustomDialog.progressDialog(this).dismiss()
         prefManager!!.setFirstTimeLaunch7(false)
-        //  val intent = Intent(this@LoginActivity, HomeActivity::class.java)
-        intent.putExtra("fragment_name", "")
+        val intent = Intent(this@LoginActivity, HomeActivity::class.java)
         startActivity(intent)
         finish()
     }

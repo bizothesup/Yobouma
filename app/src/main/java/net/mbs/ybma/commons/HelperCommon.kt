@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 
 object HelperCommon {
 
+
     @RequiresApi(Build.VERSION_CODES.M)
     fun isOnline(context: Context): Boolean {
         val connectivityManager =
