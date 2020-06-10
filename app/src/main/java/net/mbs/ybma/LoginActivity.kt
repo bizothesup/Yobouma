@@ -15,6 +15,8 @@ import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.*
 import kotlinx.android.synthetic.main.activity_login.*
 import net.mbs.ybma.commons.PrefManager
+import net.mbs.ybma.retrofit.IUserClients
+import net.mbs.ybma.retrofit.RetrofitAppClient
 import net.mbs.ybma.utils.CustomDialog
 import java.util.concurrent.TimeUnit
 
@@ -28,7 +30,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var mCallBack: PhoneAuthProvider.OnVerificationStateChangedCallbacks
     private lateinit var mverificationId: String
     private lateinit var timer: CountDownTimer
-
+    lateinit var userClients: IUserClients
     var prefManager: PrefManager? = null
 
 
@@ -69,10 +71,15 @@ class LoginActivity : AppCompatActivity() {
         initView()
         firebaseAuth = FirebaseAuth.getInstance()
         phoneNumberAuthCallbackListener()
+
+        //init retrofit
+        userClients= RetrofitAppClient.getInstance().create(IUserClients::class.java)
+
     }
 
 
     private fun initView() {
+
         resendOtp.visibility = View.GONE
         otp_layout.visibility = View.GONE
 
@@ -139,8 +146,7 @@ class LoginActivity : AppCompatActivity() {
                     input_otp.setText("")
                     progressBar_login!!.visibility = View.VISIBLE
                     // checkUserfromFirebase(firebaseAuth.currentUser!!.phoneNumber)
-                    // AsyncTask.execute { login() }
-                    Toast.makeText(this@LoginActivity, "success", Toast.LENGTH_SHORT)
+                    AsyncTask.execute { login() }
                 } else {
                     Log.w(TAG, "signInWithCredential:echoué", task.exception)
                     if (task.exception is FirebaseAuthInvalidCredentialsException) {
@@ -183,5 +189,9 @@ class LoginActivity : AppCompatActivity() {
             }
 
         }.start()
+    }
+
+    private fun login() {
+        TODO("Not yet implemented")
     }
 }
