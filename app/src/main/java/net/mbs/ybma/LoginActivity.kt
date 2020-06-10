@@ -3,10 +3,12 @@ package net.mbs.ybma
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.PhoneAuthProvider
+import kotlinx.android.synthetic.main.activity_login.*
 import net.mbs.ybma.commons.PrefManager
 import net.mbs.ybma.utils.CustomDialog
 
@@ -69,6 +71,15 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-        TODO("Not yet implemented")
+resendOtp.visibility=View.GONE
+otp_layout.visibility =View.GONE
+
+        //envoi du numero
+        send_otp.setOnClickListener{
+progressBar_login.visibility=View.VISIBLE
+val numWithCode ="+" + ccp.selectedCountryCode + input_phone!!.text.toString()
+            startPhoneNumberVerification(nowithCode!!)
+            starTimer()
+        }
     }
 }
