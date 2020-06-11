@@ -24,4 +24,5 @@
     <string name="info_insc">Veillez renseigner vos Informations</string>
     <string name="enter_your_name">Entrer Votre Nom</string>
     <string name="enter_your_firstname">Entrer votre Prénom</string>
+    <string name="destination">Destination</string>
 </resources>
