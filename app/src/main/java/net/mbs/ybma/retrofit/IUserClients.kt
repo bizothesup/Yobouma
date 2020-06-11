@@ -28,4 +28,14 @@ interface IUserClients {
         @Field("login_type") login_type: String,
         @Field("tonotify") tonotify: String
     ): Call<UserResponse>
+
+    @POST("users/update_fcm")
+    @FormUrlEncoded
+    fun userUpdateFcm(
+        @Field("key") key: String,
+        @Field("user_id") user_id: String,
+        @Field("fcm_id") fcm_id: String,
+        @Field("device_id") device_id: String,
+        @Field("user_cat") user_cat: String
+    ): Call<UserResponse>
 }
