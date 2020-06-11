@@ -25,4 +25,5 @@
     <string name="enter_your_name">Entrer Votre Nom</string>
     <string name="enter_your_firstname">Entrer votre Prénom</string>
     <string name="destination">Destination</string>
+    <string name="this_service_requires_the_activation_of_the_gps">" Ce service nécessite l'activation du service GPS. Voulez-vous activer le GPS?"</string>
 </resources>

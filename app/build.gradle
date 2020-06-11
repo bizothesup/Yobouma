@@ -70,5 +70,7 @@ dependencies {
     implementation 'com.github.d-max:spots-dialog:1.1@aar'
     //GreenRobot
     implementation 'org.greenrobot:eventbus:3.2.0'
+    implementation 'com.google.android.libraries.places:places:2.3.0'
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
 
 }
