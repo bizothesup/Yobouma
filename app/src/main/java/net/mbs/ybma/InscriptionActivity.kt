@@ -9,6 +9,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_inscription.*
+import net.mbs.ybma.commons.HelperCommon
 import net.mbs.ybma.commons.HelperUrl
 import net.mbs.ybma.commons.PrefManager
 import net.mbs.ybma.models.User
@@ -107,6 +108,7 @@ class InscriptionActivity : AppCompatActivity() {
 
                 if (userResponse.etat!! == "1"){
                 val user:User=userResponse.user!!
+                    HelperCommon.saveProfile(user = user,context = this@InscriptionActivity)
                     launchHomeScreen()
                 }
                 else if (userResponse.etat!! == "2"){

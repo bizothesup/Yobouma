@@ -20,6 +20,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_login.*
+import net.mbs.ybma.commons.HelperCommon
 import net.mbs.ybma.commons.HelperUrl
 import net.mbs.ybma.commons.PrefManager
 import net.mbs.ybma.commons.SessionUser
@@ -210,7 +211,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun login() {
         progressBar_login!!.visibility = View.GONE
-       CustomDialog.progressDialog(this@LoginActivity).show()
+         CustomDialog.progressDialog(this@LoginActivity).show()
         var userResponse:UserResponse= UserResponse()
         //request Login
        val userLog = userClients.userLogin(key = HelperUrl.KEY,phone = numWithCode!!)
@@ -227,7 +228,9 @@ class LoginActivity : AppCompatActivity() {
                 //Etat=0 Erre Request 500
 
                 if (userResponse.etat!! == "1"){
-
+                    val user:User = userResponse.user!!
+                    HelperCommon.saveProfile(user = user,context = this@LoginActivity)
+                    launchHomeScreen()
                 }
                 else if (userResponse.etat!! == "2"){
                     launchResgisterScreen()

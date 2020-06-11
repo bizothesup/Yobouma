@@ -61,5 +61,10 @@ object HelperCommon {
         } else {
             SessionUser.setPushNotification(false, context)
         }
+        updateFCM(SessionUser.getID(context))
+    }
+
+    private fun updateFCM(id: String?) {
+
     }
 }
