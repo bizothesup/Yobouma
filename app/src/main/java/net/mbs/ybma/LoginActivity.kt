@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog
 import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseTooManyRequestsException
 import com.google.firebase.auth.*
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -37,9 +38,6 @@ class LoginActivity : AppCompatActivity() {
     val TAG = "LOGINACTIVITY"
     private val APP_REQUEST_CODE = 7171 // Any number
     private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var listener: FirebaseAuth.AuthStateListener
-    private lateinit var dialog: AlertDialog
-    private lateinit var currentUser: FirebaseUser
     private lateinit var mCallBack: PhoneAuthProvider.OnVerificationStateChangedCallbacks
     private lateinit var mverificationId: String
     private lateinit var timer: CountDownTimer
@@ -74,7 +72,7 @@ class LoginActivity : AppCompatActivity() {
 
     fun launchResgisterScreen() {
         CustomDialog.progressDialog(this).dismiss()
-         //val intent = Intent(this@LoginActivity, InscriptionActivity::class.java)
+         val intent = Intent(this@LoginActivity, InscriptionActivity::class.java)
          intent.putExtra("phone", numWithCode)
         startActivity(intent)
     }
@@ -212,63 +210,44 @@ class LoginActivity : AppCompatActivity() {
 
     private fun login() {
         progressBar_login!!.visibility = View.GONE
-        CustomDialog.progressDialog(this@LoginActivity).show()
-
+       CustomDialog.progressDialog(this@LoginActivity).show()
+        var userResponse:UserResponse= UserResponse()
         //request Login
-        val userLogin = userClients.userLogin(key = HelperUrl.KEY, phone = numWithCode!!)
-        userLogin.enqueue(object: Callback<UserResponse>{
+       val userLog = userClients.userLogin(key = HelperUrl.KEY,phone = numWithCode!!)
+        userLog.enqueue(object:Callback<UserResponse>{
             override fun onFailure(call: Call<UserResponse>, t: Throwable) {
-                Log.d("",t.message)
+                Log.d(TAG,t.message)
             }
 
             override fun onResponse(call: Call<UserResponse>, response: Response<UserResponse>) {
+                userResponse = response.body()!!
                 //Etat=1 successs save profile redirect Home
                 //Etat=2 No found redirect to register save profile redirect Home
                 //Etat=3 No active
                 //Etat=0 Erre Request 500
 
-               val userReponse = response.body()
-                if(userReponse!!.etat.equals("1")){
-                    Log.d("TAGLogin",response!!.body()!!.user.toString())
-                    var user = User()
-                    user =userReponse.user!!
-                    
-                    saveProfile(user)
-                    
-                }else if(userReponse.equals("2")){
+                if (userResponse.etat!! == "1"){
+
+                }
+                else if (userResponse.etat!! == "2"){
                     launchResgisterScreen()
                 }
-                else if(userReponse.equals("3")) {
-
-                }else{
-
+                else if (userResponse.etat!! == "3"){
+                    launchResgisterScreen()
+                }
+                else{
+                    Toast.makeText(this@LoginActivity,"Erreur Server",Toast.LENGTH_SHORT).show()
                 }
             }
 
-
         })
 
+
+
+
     }
 
-    private fun saveProfile(user: User) {
-        SessionUser.setNom(user.nom, this@LoginActivity);
-        SessionUser.setPrenom(user.prenom, this@LoginActivity);
-        SessionUser.setPhone(user.phone, this@LoginActivity);
-        SessionUser.setEmail(user.email, this@LoginActivity);
-        SessionUser.setID(user.id, this@LoginActivity);
-        SessionUser.setlogintype(user.login_type, this@LoginActivity);
-        SessionUser.setUserName(user.nom + " " + user.prenom, this@LoginActivity);
-        SessionUser.setUserCategorie(user.user_cat, this@LoginActivity);
-        SessionUser.setCurrency(user.country, this@LoginActivity);
-        SessionUser.setPhoto(user.phone, this@LoginActivity);
-        SessionUser.setCountry(user.country, this@LoginActivity);
 
-        if (user.tonotify.equals("yes")) {
-            SessionUser.setPushNotification(true, this@LoginActivity)
-        } else {
-            SessionUser.setPushNotification(false, this@LoginActivity)
-        }
-    }
 }
 
 

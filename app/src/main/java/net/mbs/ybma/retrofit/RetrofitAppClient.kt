@@ -12,6 +12,7 @@ object RetrofitAppClient {
             instance = Retrofit.Builder()
                 .baseUrl(HelperUrl.URL_APP)
                 .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build()
        return instance!!
     }

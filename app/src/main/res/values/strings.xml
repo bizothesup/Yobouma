@@ -17,4 +17,11 @@
     <string name="phone">Téléphone</string>
     <string name="info_login">Veillez renseigner votre numero Téléphone</string>
     <string name="welcom">Bonjour, Bienvenu</string>
+    <string name="send">Enregistrer</string>
+    <string name="prenom">Prénom</string>
+    <string name="nom">Nom</string>
+    <string name="welcom_ins">Inscription</string>
+    <string name="info_insc">Veillez renseigner vos Informations</string>
+    <string name="enter_your_name">Entrer Votre Nom</string>
+    <string name="enter_your_firstname">Entrer votre Prénom</string>
 </resources>

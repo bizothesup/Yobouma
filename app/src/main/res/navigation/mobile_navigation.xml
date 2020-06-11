@@ -22,4 +22,19 @@
         android:name="net.mbs.ybma.fragment.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
+    <activity
+        android:id="@+id/slideWelcomActivity"
+        android:name="net.mbs.ybma.SlideWelcomActivity"
+        android:label="activity_slide_welcom"
+        tools:layout="@layout/activity_slide_welcom" />
+    <activity
+        android:id="@+id/loginActivity"
+        android:name="net.mbs.ybma.LoginActivity"
+        android:label="activity_login"
+        tools:layout="@layout/activity_login" />
+    <activity
+        android:id="@+id/splashActivity2"
+        android:name="net.mbs.ybma.SplashActivity"
+        android:label="activity_splash"
+        tools:layout="@layout/activity_splash" />
 </navigation>

@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.Window
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
+import net.mbs.ybma.models.User
 
 object HelperCommon {
 
@@ -39,6 +40,26 @@ object HelperCommon {
             val win: Window = window
             win.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             win.statusBarColor = Color.TRANSPARENT
+        }
+    }
+
+    fun saveProfile(user: User,context: Context) {
+        SessionUser.setNom(user.nom, context)
+        SessionUser.setPrenom(user.prenom, context)
+        SessionUser.setPhone(user.phone, context)
+        SessionUser.setEmail(user.email, context)
+        SessionUser.setID(user.id, context)
+        SessionUser.setlogintype(user.login_type, context)
+        SessionUser.setUserName(user.nom + " " + user.prenom, context)
+        SessionUser.setUserCategorie(user.user_cat, context)
+        SessionUser.setCurrency(user.country, context)
+        SessionUser.setPhoto(user.phone, context)
+        SessionUser.setCountry(user.country, context)
+
+        if (user.tonotify.equals("yes")) {
+            SessionUser.setPushNotification(true, context)
+        } else {
+            SessionUser.setPushNotification(false, context)
         }
     }
 }
