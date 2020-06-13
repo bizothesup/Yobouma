@@ -36,6 +36,7 @@ import retrofit2.Response
 import java.util.concurrent.TimeUnit
 
 class LoginActivity : AppCompatActivity() {
+    private var messageError: String?=null
     val TAG = "LOGINACTIVITY"
     private val APP_REQUEST_CODE = 7171 // Any number
     private lateinit var firebaseAuth: FirebaseAuth
@@ -217,6 +218,7 @@ class LoginActivity : AppCompatActivity() {
        val userLog = userClients.userLogin(key = HelperUrl.KEY,phone = numWithCode!!)
         userLog.enqueue(object:Callback<UserResponse>{
             override fun onFailure(call: Call<UserResponse>, t: Throwable) {
+                messageError=t.message
                 Log.d(TAG,t.message)
             }
 

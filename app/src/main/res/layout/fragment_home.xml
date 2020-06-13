@@ -1,15 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".fragment.ui.home.HomeFragment">
 
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <RelativeLayout
+        android:id="@+id/layout_main"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".fragment.ui.maps.MapsFragment" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:layout_height="match_parent">
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:context=".fragment.ui.maps.MapsFragment" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:background="@drawable/custom_layout_destination"
+        android:orientation="vertical"
+        android:layout_margin="10dp"
+        android:elevation="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="visible">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+
+            <fragment
+                android:id="@+id/autocomplete_fragment_depart"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:tint="@color/colorYellowDark"
+                android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+                android:layout_toStartOf="@+id/my_location"
+                />
+                <ImageView
+                    android:id="@+id/my_location"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:background="?android:selectableItemBackground"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/ic_my_location"
+                    android:tint="@color/grisGooglePlay"
+                    android:padding="12dp"
+                    android:layout_toStartOf="@+id/chose_my_location"
+                    />
+            <ImageView
+                android:layout_alignParentRight="true"
+                android:id="@+id/chose_my_location"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:background="?android:selectableItemBackground"
+                android:layout_centerInParent="true"
+                android:src="@drawable/ic_pin_2"
+                android:tint="@color/grisGooglePlay"
+                android:padding="12dp"
+                />
+
+
+        </RelativeLayout>
+
+
+
+    </LinearLayout>
+</RelativeLayout>
