@@ -28,4 +28,8 @@
     <string name="this_service_requires_the_activation_of_the_gps">" Ce service nécessite l'activation du service GPS. Voulez-vous activer le GPS?"</string>
     <string name="depart">Départ</string>
     <string name="point_depart">Votre point de Départ</string>
+    <string name="gps">Ce service nécessite l\'activation du service GPS. Voulez-vous activer le GPS?</string>
+    <string name="gps_active_servce">Ce service nécessite l\'activation du service GPS. Voulez-vous activer le GPS?</string>
+    <string name="position">Ma Position</string>
+    <string name="arrivee">Arrivée</string>
 </resources>

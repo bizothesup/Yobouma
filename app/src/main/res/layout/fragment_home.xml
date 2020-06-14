@@ -62,8 +62,31 @@
                 android:tint="@color/grisGooglePlay"
                 android:padding="12dp"
                 />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
 
-
+            <fragment
+                android:id="@+id/autocomplete_fragment_arrivee"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:tint="@color/colorYellowDark"
+                android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
+                android:layout_toStartOf="@+id/choose_my_location_destination"
+                />
+            <ImageView
+                android:background="?android:selectableItemBackground"
+                android:padding="12dp"
+                android:layout_alignParentRight="true"
+                android:src="@drawable/ic_pin_2"
+                android:visibility="visible"
+                android:tint="@color/colorYellowDark"
+                android:layout_marginTop="0dp"
+                android:id="@+id/choose_my_location_destination"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"/>
         </RelativeLayout>
 
 
