@@ -219,7 +219,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             (autocomplete_fragment_arrive.view as LinearLayout).getChildAt(0) as ImageView
         search_icon_arrive.setImageDrawable(resources.getDrawable(R.drawable.ic_navigator))
 
-        input_text_arrivee = autocomplete_fragment_depart.requireView()
+        input_text_arrivee = autocomplete_fragment_arrive.requireView()
             .findViewById(R.id.places_autocomplete_search_input)
 
         input_text_arrivee!!.textSize = 16.0f
@@ -233,6 +233,61 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         autocomplete_fragment_arrive.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onPlaceSelected(place: Place) {
                 Log.i("Home PlaceListener ", "Place: " + place.name + ", " + place.latLng)
+
+                if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
+                    departMarkerMesRequetes!!.remove()
+                    destinationMarkerMesRequetes!!.remove()
+                    // currentPolyline.remove()
+                }
+
+                //recuperation localisation depart
+                val latLng = place.latLng
+                if (place.name!!.trim().isNotEmpty())
+                    input_text_arrivee!!.setText(place.name)
+
+                //ajouter Marker depart
+                if(destinationMarker != null)
+                    destinationMarker!!.remove()
+
+                //Positionnement camera
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13F))
+
+                val cameraPosition = CameraPosition.Builder()
+                    .target(latLng)
+                    .zoom(15F)
+                    .bearing(90F)
+                    .tilt(40F)
+                    .build()
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+
+                if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size> 1) {
+//                    departMarkerReservation.remove()
+//                    destinationMarkerReservation.remove()
+                    tabLocation.clear()
+                    if(departMarkerReservation != null)
+                        departMarkerReservation!!.remove()
+                    if(destinationMarkerReservation != null)
+                        destinationMarkerReservation!!.remove()
+                    //if(currentPolyline != null)
+                       // currentPolyline.remove();
+                }
+
+                if(departLocationReservation != null && destinationLocationReservation != null){
+                    destinationLocationReservation.setLatitude(latLng!!.latitude);
+                    destinationLocationReservation.setLongitude(latLng.longitude);
+                    tabLocation.add(destinationLocationReservation);
+                    if(destinationMarkerReservation != null)
+                        destinationMarkerReservation!!.remove();
+                    addMarkerDestination(LatLng(latLng!!.latitude,latLng.longitude));
+
+//                    Toast.makeText(context, ""+tabLocation.size(), Toast.LENGTH_SHORT).show();
+                    if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                        //showProgressDialog();
+                        //M.setCurrentFragment("home",context);
+                        //new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
+                    }
+                }
+
 
             }
 
@@ -333,6 +388,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
 
+
     override fun onMapReady(googleMap: GoogleMap?) {
         mMap = googleMap!!
         if (ActivityCompat.checkSelfPermission(
@@ -387,6 +443,17 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         departMarkerReservation!!.tag = resources.getString(R.string.depart)
 
     }
+    private fun addMarkerDestination(latLng: LatLng) {
+        //Ajouter Marker
+        val markerOptions = MarkerOptions()
+        markerOptions.title(resources.getString(R.string.arrivee))
+        markerOptions.snippet(resources.getString(R.string.point_depart))
+        markerOptions.position(latLng)
+        markerOptions.icon(generateBitmapDescriptorFromRes(requireContext(), R.drawable.ic_arrival_point_2))
+        destinationMarkerReservation = mMap.addMarker(markerOptions)
+        destinationMarkerReservation!!.tag = resources.getString(R.string.arrive)
+    }
+
 
     private fun generateBitmapDescriptorFromRes(context: Context, resId: Int): BitmapDescriptor? {
         val drawable = ContextCompat.getDrawable(context, resId)
