@@ -1,15 +1,17 @@
 package net.mbs.ybma.fragment.ui.home
 
 import android.Manifest
-import android.app.Activity.RESULT_CANCELED
-import android.app.Activity.RESULT_OK
+import android.app.Activity.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.Location
+import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -35,6 +37,7 @@ import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.AutocompleteActivity
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import kotlinx.android.synthetic.main.fragment_home.*
 import net.mbs.ybma.R
 import net.mbs.ybma.commons.SessionUser
 import java.util.*
@@ -101,6 +104,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
         //set Icon
         val  search_icon_depart = (autocomplete_fragment_depart.view as LinearLayout).getChildAt(0) as ImageView
+        search_icon_depart.setImageDrawable(resources.getDrawable(R.drawable.ic_navigator_depart))
+
         input_text_depart= (autocomplete_fragment_depart.view as LinearLayout).findViewById<EditText>(R.id.places_autocomplete_search_input)
         input_text_depart!!.textSize=16.0f
         input_text_depart!!.hint=resources.getString(R.string.depart)
@@ -161,7 +166,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
         })
 
+        //Choisir option ma position
+        my_location.setOnClickListener {
+            if(!isLocationEnabled(requireContext()){
 
+            }
+        }
 
         //Carte Map
         val mapFragment = childFragmentManager
@@ -244,6 +254,23 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         val canvas = Canvas(bitmap)
         drawable.draw(canvas)
         return BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+
+    //Verifier que c'st activer le GPS
+    private fun isLocationEnabled(context: Context):Boolean{
+        var enable = false
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            val mode = Settings.Secure.getInt(context.contentResolver,Settings.Secure.LOCATION_MODE,
+            Settings.Secure.LOCATION_MODE_OFF)
+
+            enable = (mode != Settings.Secure.LOCATION_MODE_OFF)
+        }else{
+           val service = context.getSystemService(LOCATION_SERVICE) as LocationManager
+             enable = service.isProviderEnabled(LocationManager.GPS_PROVIDER)  ||
+                     service.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        }
+        return enable
     }
 }
 
