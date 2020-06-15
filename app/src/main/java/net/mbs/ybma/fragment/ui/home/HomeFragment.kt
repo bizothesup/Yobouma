@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Activity.LOCATION_SERVICE
+import android.app.Activity.RESULT_CANCELED
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -39,6 +40,8 @@ import com.google.android.gms.maps.model.*
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.AutocompleteActivity
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.karumi.dexter.Dexter
@@ -344,7 +347,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
             }
 
             override fun onError(status: Status) {
-                Log.d("Home Error", status.statusMessage)
+
             }
 
         })
@@ -657,6 +660,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     e.printStackTrace()
                 }
 
+            }else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+                // TODO: Handle the error.
+                val status = Autocomplete.getStatusFromIntent(data!!);
+                Log.i("HOME ERROR", status.getStatusMessage());
+            } else if (resultCode == RESULT_CANCELED) {
+                // The user canceled the operation.
             }
         }else
             if(requestCode==PLACE_PICKER_REQUEST_RESERVATION_DESTINATION){
@@ -721,6 +730,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     }catch (e:IOException){
                         e.printStackTrace()
                     }
+                }else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+                    // TODO: Handle the error.
+                    val status = Autocomplete.getStatusFromIntent(data!!);
+                    Log.i("HOME ERROR", status.getStatusMessage());
+                } else if (resultCode == RESULT_CANCELED) {
+                    // The user canceled the operation.
                 }
             }else{
                 super.onActivityResult(requestCode, resultCode, data)
