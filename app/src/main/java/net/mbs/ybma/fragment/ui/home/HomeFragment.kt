@@ -144,26 +144,31 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
             ViewModelProviders.of(this).get(HomeViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_home, container, false)
 
+        //Carte Map
+        val mapFragment = childFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+        mapView = mapFragment.view
+        mapFragment.getMapAsync(this)
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
         //Element view Init
         my_location = root.findViewById(R.id.my_location) as ImageView
         chose_my_location = root.findViewById(R.id.chose_my_location) as ImageView
         choose_my_location_destination = root.findViewById(R.id.choose_my_location_destination) as ImageView
 
 
-
+        //Init Coordornnée
         destinationLocation.latitude = 12.647305
         destinationLocation.longitude = -7.943012
         departLocationReservation.latitude = 12.647305
         departLocationReservation.longitude = -7.943012
         destinationLocationReservation.latitude = 12.647305
         destinationLocationReservation.longitude = -7.943012
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
         //Location Request and CallBack
         createLocationRequest()
         startLocationOrUpdateCallBack()
-
-
-
 
 
         //Init Place for Autocomplet
@@ -475,8 +480,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     .setMapZoom(16f) //zoom par defaut est 14.0f
                     .setAddressRequired(true) //Définir si renvoyer uniquement les coordonnées si impossible de récupérer l'adresse pour les coordonnées. Par défaut: vrai
                     .hideMarkerShadow(true) // Masque l'ombre sous le marqueur de carte Départ. Par défaut: Faux
-                    .setMarkerDrawable(R.drawable.ic_pin_2) // Change the default Marker Image
-                    .setMarkerImageImageColor(R.color.grisGooglePlay)
+                    .setMarkerDrawable(R.drawable.ic_arrival_point_2) // Change the default Marker Image
+                   // .setMarkerImageImageColor(R.color.grisGooglePlay)
                     .setFabColor(R.color.colorYellowDark)
                     .setPrimaryTextColor(R.color.colorLogoBlack) // Change text color of Shortened Address
                     .setSecondaryTextColor(R.color.colorLogoBlack) // Change text color of full Address
@@ -484,7 +489,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     .onlyCoordinates(true)  //Get only Coordinates from Place Picker
                     .build(requireActivity())
 
-                startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DEPART)
+                startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DESTINATION)
             }else{
                 val intent =PlacePicker.IntentBuilder()
                     .setLatLong(12.647378,-7.942810)  // Initial Latitude and Longitude the Map will load into
@@ -501,18 +506,9 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     .setMapType(MapType.NORMAL)
                     .onlyCoordinates(true)  //Get only Coordinates from Place Picker
                     .build(requireActivity())
-                startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DEPART)
+                startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DESTINATION)
             }
         }
-
-
-        //Carte Map
-        val mapFragment = childFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-        mapView = mapFragment.view
-        mapFragment.getMapAsync(this)
-
-
 
         return root
     }
@@ -690,8 +686,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
                     if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
-//                    departMarkerReservation.remove();
-//                    destinationMarkerReservation.remove();
+                       departMarkerReservation!!.remove();
+                       destinationMarkerReservation!!.remove();
                         tabLocation.clear();
                         if(departMarkerReservation != null)
                             departMarkerReservation!!.remove();
@@ -701,11 +697,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                         // currentPolyline.remove();
                     }
                     if(departLocationReservation != null && destinationLocationReservation != null){
-                        destinationLocationReservation.setLatitude(adresseData.latitude);
-                        destinationLocationReservation.setLongitude(adresseData.longitude);
+                        destinationLocationReservation.latitude = adresseData.latitude;
+                        destinationLocationReservation.longitude = adresseData.longitude;
                         tabLocation.add(departLocationReservation);
                         if(destinationMarkerReservation != null)
                             destinationMarkerReservation!!.remove();
+
                         addMarkerDestination(LatLng(adresseData.latitude,adresseData.longitude));
 
                         if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
