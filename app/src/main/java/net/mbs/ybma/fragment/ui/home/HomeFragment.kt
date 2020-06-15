@@ -104,6 +104,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
     companion object{
         private var PLACE_PICKER_REQUEST_RESERVATION_DEPART = 101
+        private var PLACE_PICKER_REQUEST_RESERVATION_DESTINATION = 102
         private const val FAST_INTERVAL: Long=5000
         private const val UPDATE_INTERVAL: Long=5000
         private const val REQUEST_CHECK_SETTINGS = 2
@@ -142,7 +143,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         departLocationReservation.longitude = -1.52709
         destinationLocationReservation.latitude = 12.36858
         destinationLocationReservation.longitude = -1.52709
-
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         //Location Request and CallBack
         createLocationRequest()
         startLocationOrUpdateCallBack()
@@ -274,11 +275,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         autocomplete_fragment_arrive.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onPlaceSelected(place: Place) {
 
-               /* if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
+                if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
                     departMarkerMesRequetes!!.remove()
                     destinationMarkerMesRequetes!!.remove()
                     // currentPolyline.remove()
-                }*/
+                }
 
                 //recuperation localisation depart
                 val latLng = place.latLng
@@ -424,7 +425,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         mapView = mapFragment.view
         mapFragment.getMapAsync(this)
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
 
         return root
     }
@@ -505,6 +506,145 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
             }
         }
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if(requestCode == PLACE_PICKER_REQUEST_RESERVATION_DEPART){
+            if (resultCode == Activity.RESULT_OK && data!=null){
+                if(departMarkerMesRequetes != null)
+                    departMarkerMesRequetes!!.remove()
+                if(destinationMarkerMesRequetes != null)
+                    destinationMarkerMesRequetes!!.remove()
+
+                val adresseData = data.getParcelableExtra<AddressData>(Constants.ADDRESS_INTENT)
+
+                if(destinationMarker != null)
+                    destinationMarker!!.remove()
+
+                val latlong = LatLng(adresseData.latitude,adresseData.longitude)
+
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong,13f))
+                val cameraPosition =CameraPosition.Builder()
+                    .target(latlong)
+                    .zoom(15f)
+                    .build()
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+
+                if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
+//                    departMarkerReservation.remove();
+//                    destinationMarkerReservation.remove();
+                    tabLocation.clear();
+                    if(departMarkerReservation != null)
+                        departMarkerReservation!!.remove();
+                    if(destinationMarkerReservation != null)
+                        destinationMarkerReservation!!.remove();
+                    //if(currentPolyline != null)
+                    // currentPolyline.remove();
+                }
+
+                if(departLocationReservation != null && destinationLocationReservation != null){
+                    departLocationReservation.setLatitude(adresseData.latitude)
+                    departLocationReservation.setLongitude(adresseData.longitude)
+                    tabLocation!!.add(departLocationReservation);
+                    if(departMarkerReservation != null)
+                        departMarkerReservation!!.remove()
+                    addMarkerDepar(LatLng(adresseData.latitude,adresseData.longitude));
+
+                    if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                        //showProgressDialog();
+                        //M.setCurrentFragment("home",context);
+                        // new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
+//                        BottomSheetFragmentRequeteFacturation bottomSheetFragmentBooking = new BottomSheetFragmentRequeteFacturation(getActivity(), departLocationReservation, destinationLocationReservation);
+//                        bottomSheetFragmentBooking.show(((FragmentActivity) context).getSupportFragmentManager(), bottomSheetFragmentBooking.getTag());
+                    }
+                }
+                input_text_depart!!.setText(requireContext().resources.getString(R.string.point_de_depart));
+
+                try {
+                    val geo = Geocoder(requireContext(),Locale.getDefault())
+                    val addresses = geo.getFromLocation(latlong.latitude,latlong.longitude,1)
+                    if(addresses.isNotEmpty()){
+                        val address = addresses[0].getAddressLine(0)
+                        if(address != ""){
+                            val tabAdress = address.split(",")
+                            input_text_depart!!.setText(tabAdress[0])
+                        }
+                    }
+                }catch (e:IOException){
+                    e.printStackTrace()
+                }
+
+            }
+        }else
+            if(requestCode==PLACE_PICKER_REQUEST_RESERVATION_DESTINATION){
+                if(resultCode==Activity.RESULT_OK && data!=null){
+                    if(departMarkerMesRequetes != null)
+                        departMarkerMesRequetes!!.remove()
+                    if(destinationMarkerMesRequetes != null)
+                        destinationMarkerMesRequetes!!.remove()
+
+                    val adresseData = data.getParcelableExtra<AddressData>(Constants.ADDRESS_INTENT)
+
+                    if(destinationMarker != null)
+                        destinationMarker!!.remove()
+
+                    val latlong = LatLng(adresseData.latitude,adresseData.longitude)
+
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong,13f))
+                    val cameraPosition =CameraPosition.Builder()
+                        .target(latlong)
+                        .zoom(15f)
+                        .build()
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+
+                    if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
+//                    departMarkerReservation.remove();
+//                    destinationMarkerReservation.remove();
+                        tabLocation.clear();
+                        if(departMarkerReservation != null)
+                            departMarkerReservation!!.remove();
+                        if(destinationMarkerReservation != null)
+                            destinationMarkerReservation!!.remove();
+                        //if(currentPolyline != null)
+                        // currentPolyline.remove();
+                    }
+                    if(departLocationReservation != null && destinationLocationReservation != null){
+                        destinationLocationReservation.setLatitude(adresseData.latitude);
+                        destinationLocationReservation.setLongitude(adresseData.longitude);
+                        tabLocation.add(departLocationReservation);
+                        if(destinationMarkerReservation != null)
+                            destinationMarkerReservation!!.remove();
+                        addMarkerDestination(LatLng(adresseData.latitude,adresseData.longitude));
+
+                        if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                            //showProgressDialog();
+                            //M.setCurrentFragment("home",context);
+                            // new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
+//                        BottomSheetFragmentRequeteFacturation bottomSheetFragmentBooking = new BottomSheetFragmentRequeteFacturation(getActivity(), departLocationReservation, destinationLocationReservation);
+//                        bottomSheetFragmentBooking.show(((FragmentActivity) context).getSupportFragmentManager(), bottomSheetFragmentBooking.getTag());
+                        }
+                    }
+                    input_text_arrivee!!.setText(requireContext().resources.getString(R.string.destination))
+                    try {
+                        val geo = Geocoder(requireContext(),Locale.getDefault())
+                        val addresses = geo.getFromLocation(latlong.latitude,latlong.longitude,1)
+                        if(addresses.isNotEmpty()){
+                            val address = addresses[0].getAddressLine(0)
+                            if(address != ""){
+                                val tabAdress = address.split(",")
+                                input_text_arrivee!!.setText(tabAdress[0])
+                            }
+                        }
+                    }catch (e:IOException){
+                        e.printStackTrace()
+                    }
+                }
+            }else{
+                super.onActivityResult(requestCode, resultCode, data)
+            }
+
+    }
+
+
     private fun addMarker(latLng: LatLng) {
         // Add Marker to Map
         val markerOptions = MarkerOptions()
@@ -537,7 +677,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         destinationMarkerReservation = mMap.addMarker(markerOptions)
         destinationMarkerReservation!!.tag = resources.getString(R.string.arrive)
     }
-
 
     private fun generateBitmapDescriptorFromRes(context: Context, resId: Int): BitmapDescriptor? {
         val drawable = ContextCompat.getDrawable(context, resId)
@@ -649,76 +788,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if(resultCode == PLACE_PICKER_REQUEST_RESERVATION_DEPART){
-            if (resultCode == Activity.RESULT_OK && data!=null){
-                if(departMarkerMesRequetes != null)
-                    departMarkerMesRequetes!!.remove()
-                if(destinationMarkerMesRequetes != null)
-                    destinationMarkerMesRequetes!!.remove()
 
-                val adresseData = data.getParcelableExtra<AddressData>(Constants.ADDRESS_INTENT)
-
-                if(destinationMarker != null)
-                    destinationMarker!!.remove()
-
-                val latlong = LatLng(adresseData.latitude,adresseData.longitude)
-
-                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong,13f))
-                val cameraPosition =CameraPosition.Builder()
-                    .target(latlong)
-                    .zoom(15f)
-                    .build()
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-
-                if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
-//                    departMarkerReservation.remove();
-//                    destinationMarkerReservation.remove();
-                    tabLocation.clear();
-                    if(departMarkerReservation != null)
-                        departMarkerReservation!!.remove();
-                    if(destinationMarkerReservation != null)
-                        destinationMarkerReservation!!.remove();
-                    //if(currentPolyline != null)
-                       // currentPolyline.remove();
-                }
-
-                if(departLocationReservation != null && destinationLocationReservation != null){
-                    departLocationReservation.setLatitude(adresseData.latitude)
-                    departLocationReservation.setLongitude(adresseData.longitude)
-                    tabLocation!!.add(departLocationReservation);
-                    if(departMarkerReservation != null)
-                        departMarkerReservation!!.remove()
-                    addMarkerDepar(LatLng(adresseData.latitude,adresseData.longitude));
-
-                    if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
-                        //showProgressDialog();
-                        //M.setCurrentFragment("home",context);
-                       // new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
-//                        BottomSheetFragmentRequeteFacturation bottomSheetFragmentBooking = new BottomSheetFragmentRequeteFacturation(getActivity(), departLocationReservation, destinationLocationReservation);
-//                        bottomSheetFragmentBooking.show(((FragmentActivity) context).getSupportFragmentManager(), bottomSheetFragmentBooking.getTag());
-                    }
-                }
-                input_text_depart!!.setText(requireContext().resources.getString(R.string.point_de_depart));
-
-                try {
-                    val geo = Geocoder(requireContext(),Locale.getDefault())
-                    val addresses = geo.getFromLocation(latlong.latitude,latlong.longitude,1)
-                    if(addresses.isNotEmpty()){
-                        val address = addresses[0].getAddressLine(0)
-                        if(address != ""){
-                            val tabAdress = address.split(",")
-                            input_text_depart!!.setText(tabAdress[0])
-                        }
-                    }
-                }catch (e:IOException){
-                    e.printStackTrace()
-                }
-
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
 
 
 }
