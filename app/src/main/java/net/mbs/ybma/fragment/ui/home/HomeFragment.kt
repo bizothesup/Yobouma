@@ -49,6 +49,8 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.sucho.placepicker.AddressData
 import com.sucho.placepicker.Constants
+import com.sucho.placepicker.MapType
+import com.sucho.placepicker.PlacePicker
 import net.mbs.ybma.R
 import net.mbs.ybma.commons.SessionUser
 import java.io.IOException
@@ -119,6 +121,15 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
     }
 
+    override fun onPause() {
+        super.onPause()
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        startLocationUpdates()
+    }
 
 
     override fun onCreateView(
@@ -137,11 +148,11 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
 
 
-        destinationLocation.latitude = 12.36858
+        destinationLocation.latitude = 12.647305
         destinationLocation.longitude = -1.52709
-        departLocationReservation.latitude = 12.36858
-        departLocationReservation.longitude = -1.52709
-        destinationLocationReservation.latitude = 12.36858
+        departLocationReservation.latitude = 12.647305
+        departLocationReservation.longitude = -7.943012
+        destinationLocationReservation.latitude = 12.647305
         destinationLocationReservation.longitude = -1.52709
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         //Location Request and CallBack
@@ -416,7 +427,45 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
             }
         }
 
+        //Show PlacePiker
+        chose_my_location!!.setOnClickListener {
+            if(departLocationReservation !=null){
+               val intent = PlacePicker.IntentBuilder()
+                   .setLatLong(departLocationReservation.latitude,departLocationReservation.longitude) //init Map à l'entrer
+                   .showLatLong(true) //afficher lat/long dans l'Activite
+                   .setMapZoom(16f) //zoom par defaut est 14.0f
+                   .setAddressRequired(true) //Définir si renvoyer uniquement les coordonnées si impossible de récupérer l'adresse pour les coordonnées. Par défaut: vrai
+                   .hideMarkerShadow(true) // Masque l'ombre sous le marqueur de carte Départ. Par défaut: Faux
+                   .setMarkerDrawable(R.drawable.ic_pin) // Change the default Marker Image
+                   .setMarkerImageImageColor(R.color.grisGooglePlay)
+                   .setFabColor(R.color.colorYellowDark)
+                   .setPrimaryTextColor(R.color.colorLogoBlack) // Change text color of Shortened Address
+                   .setSecondaryTextColor(R.color.colorLogoBlack) // Change text color of full Address
+                   .setBottomViewColor(R.color.colorLogoBlack)
+                   .setMapType(MapType.NORMAL)
+                   .onlyCoordinates(true)  //Get only Coordinates from Place Picker
+                   .build(requireActivity())
 
+                startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DEPART)
+            }else{
+                val intent =PlacePicker.IntentBuilder()
+                    .setLatLong(12.36858, -1.52709)  // Initial Latitude and Longitude the Map will load into
+                    .showLatLong(true)  // Show Coordinates in the Activity
+                    .setMapZoom(15.0f)  // Map Zoom Level. Default: 14.0
+                    .setAddressRequired(true) // Set If return only Coordinates if cannot fetch Address for the coordinates. Default: True
+                    .hideMarkerShadow(true) // Hides the shadow under the map markerDepart. Default: False
+                    .setMarkerDrawable(R.drawable.ic_pin) // Change the default Marker Image
+                    .setMarkerImageImageColor(R.color.grisGooglePlay)
+                    .setFabColor(R.color.colorYellowDark)
+                    .setPrimaryTextColor(R.color.colorLogoBlack) // Change text color of Shortened Address
+                    .setSecondaryTextColor(R.color.colorLogoBlack) // Change text color of full Address
+//                        .setMapRawResourceStyle(R.raw.map_style)  //Set Map Style
+                    .setMapType(MapType.NORMAL)
+                    .onlyCoordinates(true)  //Get only Coordinates from Place Picker
+                    .build(requireActivity())
+                startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DEPART)
+            }
+        }
 
 
         //Carte Map
