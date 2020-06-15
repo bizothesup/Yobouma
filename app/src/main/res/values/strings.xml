@@ -33,4 +33,5 @@
     <string name="gps_active_servce">Ce service nécessite l\'activation du service GPS. Voulez-vous activer le GPS?</string>
     <string name="position">Ma Position</string>
     <string name="arrivee">Arrivée</string>
+    <string name="point_de_depart">Point Départ</string>
 </resources>

@@ -1,10 +1,13 @@
 package net.mbs.ybma.fragment.ui.home
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Activity.LOCATION_SERVICE
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -13,6 +16,7 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
@@ -24,7 +28,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
+import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.common.api.Status
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -35,12 +41,21 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.DexterBuilder
+import com.karumi.dexter.MultiplePermissionsReport
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import com.sucho.placepicker.AddressData
+import com.sucho.placepicker.Constants
 import net.mbs.ybma.R
 import net.mbs.ybma.commons.SessionUser
 import java.io.IOException
 import java.util.*
 
-class HomeFragment : Fragment(), OnMapReadyCallback {
+class HomeFragment : Fragment(), OnMapReadyCallback{
+
 
 
     private lateinit var homeViewModel: HomeViewModel
@@ -81,9 +96,29 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     var chose_my_location: ImageView?=null
     var choose_my_location_destination:ImageView?=null
 
+    //Google Api Client
+    private lateinit var fusedLocationProviderClient:FusedLocationProviderClient
+    private lateinit var locationRequest:LocationRequest
+    private lateinit var locationCallback: LocationCallback
+    private var locationUpdateState = false
+
     companion object{
         private var PLACE_PICKER_REQUEST_RESERVATION_DEPART = 101
+        private const val FAST_INTERVAL: Long=5000
+        private const val UPDATE_INTERVAL: Long=5000
+        private const val REQUEST_CHECK_SETTINGS = 2
     }
+
+    override fun onStart() {
+        super.onStart()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
+    }
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -107,6 +142,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         departLocationReservation.longitude = -1.52709
         destinationLocationReservation.latitude = 12.36858
         destinationLocationReservation.longitude = -1.52709
+
+        //Location Request and CallBack
+        createLocationRequest()
+        startLocationOrUpdateCallBack()
+
+
+
 
 
         //Init Place for Autocomplet
@@ -163,7 +205,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
 //                    departMarkerReservation.remove()
 //                    destinationMarkerReservation.remove()
-                    tabLocation.clear();
+                    tabLocation.clear()
                     if(departMarkerReservation != null)
                         departMarkerReservation!!.remove()
                     if(destinationMarkerReservation != null)
@@ -173,13 +215,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 }
 
                 if(departLocationReservation != null && destinationLocationReservation != null){
-                    departLocationReservation.setLatitude(latLng!!.latitude);
-                    departLocationReservation.setLongitude(latLng.longitude);
-                    tabLocation.add(departLocationReservation);
+                    departLocationReservation.latitude = latLng!!.latitude
+                    departLocationReservation.longitude = latLng.longitude
+                    tabLocation.add(departLocationReservation)
                     if(departMarkerReservation != null)
                         departMarkerReservation!!.remove()
-                    ;
-                    addMarkerDepar(LatLng(latLng!!.latitude, latLng.longitude))
+                    addMarkerDepar(LatLng(latLng.latitude, latLng.longitude))
 
                     //Positionnement camera
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13F))
@@ -187,8 +228,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     val cameraPosition = CameraPosition.Builder()
                         .target(latLng)
                         .zoom(15F)
-                        .bearing(90F)
-                        .tilt(40F)
+                        //.bearing(90F)
+                       // .tilt(40F)
                         .build()
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
@@ -232,13 +273,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         ///Listerner des Places write to interfaces
         autocomplete_fragment_arrive.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onPlaceSelected(place: Place) {
-                Log.i("Home PlaceListener ", "Place: " + place.name + ", " + place.latLng)
 
-                if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
+               /* if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
                     departMarkerMesRequetes!!.remove()
                     destinationMarkerMesRequetes!!.remove()
                     // currentPolyline.remove()
-                }
+                }*/
 
                 //recuperation localisation depart
                 val latLng = place.latLng
@@ -255,8 +295,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 val cameraPosition = CameraPosition.Builder()
                     .target(latLng)
                     .zoom(15F)
-                    .bearing(90F)
-                    .tilt(40F)
+                    //.bearing(90F)
+                    //.tilt(40F)
                     .build()
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
@@ -273,12 +313,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 }
 
                 if(departLocationReservation != null && destinationLocationReservation != null){
-                    destinationLocationReservation.setLatitude(latLng!!.latitude);
-                    destinationLocationReservation.setLongitude(latLng.longitude);
-                    tabLocation.add(destinationLocationReservation);
+                    destinationLocationReservation.latitude = latLng!!.latitude
+                    destinationLocationReservation.longitude = latLng.longitude
+                    tabLocation.add(destinationLocationReservation)
                     if(destinationMarkerReservation != null)
-                        destinationMarkerReservation!!.remove();
-                    addMarkerDestination(LatLng(latLng!!.latitude,latLng.longitude));
+                        destinationMarkerReservation!!.remove()
+                    addMarkerDestination(LatLng(latLng.latitude,latLng.longitude))
 
 //                    Toast.makeText(context, ""+tabLocation.size(), Toast.LENGTH_SHORT).show();
                     if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
@@ -315,8 +355,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13F))
 
                     val cameraPosition = CameraPosition.Builder()
-                        .bearing(90F)
-                        .tilt(40F)
+                        //.bearing(90F)
+                        //.tilt(40F)
                         .zoom(15F)
                         .target(latLng)
                         .build()
@@ -352,20 +392,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size> 1) {
 //                            departMarkerReservation.remove();
 //                            destinationMarkerReservation.remove();
-                        tabLocation.clear();
+                        tabLocation.clear()
                         if(departMarkerReservation != null)
-                            departMarkerReservation!!.remove();
+                            departMarkerReservation!!.remove()
                         if(destinationMarkerReservation != null)
-                            destinationMarkerReservation!!.remove();
+                            destinationMarkerReservation!!.remove()
                         //if(currentPolyline != null)
                           //  currentPolyline.remove();
                     }
                     if(departLocationReservation != null && destinationLocationReservation != null){
-                        departLocationReservation.setLatitude(latLng.latitude);
-                        departLocationReservation.setLongitude(latLng.longitude);
-                        tabLocation.add(departLocationReservation);
+                        departLocationReservation.latitude = latLng.latitude
+                        departLocationReservation.longitude = latLng.longitude
+                        tabLocation.add(departLocationReservation)
                         if(departMarkerReservation != null)
-                            departMarkerReservation!!.remove();
+                            departMarkerReservation!!.remove()
                         addMarkerDepar(latLng)
 
                         //FetchUrl for direction
@@ -383,6 +423,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapView = mapFragment.view
         mapFragment.getMapAsync(this)
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         return root
     }
@@ -402,7 +444,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 
             return
         }
-        mMap.isMyLocationEnabled = true
+       mMap.isMyLocationEnabled = true
 
         //Placer le button zoom position to bottom
         if (mapView != null && mapView!!.findViewById<View?>("1".toInt()) != null) {
@@ -424,14 +466,56 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
 //        mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.uiSettings.isMyLocationButtonEnabled = true
         mMap.uiSettings.isZoomControlsEnabled = true
-        //mMap.setOnMyLocationButtonClickListener(this)
+        //mMap.setOnMyLocationButtonClickListener()
         // mMap.setOnMyLocationClickListener(this)
         mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
 
+        // Initialize the location fields
+        Log.d("Home currenLocation",currentLocation.toString())
+        if (currentLocation != null) {
+            val latLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
+            mMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(latLng, 13f)
+            )
+            val cameraPosition = CameraPosition.Builder()
+                .target(latLng) // Sets the center of the map to location user
+                .zoom(15f) // Sets the zoom
+                //                    .bearing(90)                // Sets the orientation of the camera to east
+                //                    .tilt(40)                   // Sets the tilt of the camera to 30 degrees
+                .build() // Creates a CameraPosition from the builder
+          mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+        }
+
+      mMap.setOnMapClickListener{
+          Toast.makeText(context, ""+it.toString(), Toast.LENGTH_SHORT).show()
+      }
 
     }
 
-
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            PLACE_PICKER_REQUEST_RESERVATION_DEPART-> {
+                if (!isLocationEnabled(requireContext()))
+                    dialogMessageActiverGPS()
+                return
+            }
+        }
+    }
+    private fun addMarker(latLng: LatLng) {
+        // Add Marker to Map
+        val markerOptions = MarkerOptions()
+        markerOptions.title(resources.getString(R.string.depart))
+        markerOptions.snippet(resources.getString(R.string.point_depart))
+       Log.d("Home LatLng",latLng.toString())
+        markerOptions.position(latLng)
+        markerOptions.icon(generateBitmapDescriptorFromRes(requireContext(), R.drawable.ic_location_pin_1))
+        departMarkerReservation = mMap.addMarker(markerOptions)
+        departMarkerReservation!!.tag = resources.getString(R.string.depart)
+    }
     private fun addMarkerDepar(latLng: LatLng) {
         //Ajouter Marker
         val markerOptions = MarkerOptions()
@@ -507,5 +591,135 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         val alert = builder.create()
         alert.show()
     }
+
+    //Google Api start Location Or Update Request and callBack
+    private fun createLocationRequest(){
+        locationRequest= LocationRequest()
+        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        locationRequest.interval = UPDATE_INTERVAL
+        locationRequest.fastestInterval = FAST_INTERVAL
+        locationRequest.smallestDisplacement = 20f
+
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+
+        val client = LocationServices.getSettingsClient(requireContext())
+        val task =  client.checkLocationSettings(builder.build())
+
+        task.addOnSuccessListener {
+            locationUpdateState = true
+            startLocationUpdates()
+        }
+        task.addOnFailureListener {e ->  
+          if(e is ResolvableApiException){
+              try {
+                  e.startResolutionForResult(requireActivity(),REQUEST_CHECK_SETTINGS)
+              }catch (sendex: IntentSender.SendIntentException){
+
+              }
+          }
+        }
+
+    }
+
+    private fun startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+
+            return
+        }
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest,locationCallback,
+            Looper.myLooper())
+    }
+
+    private fun  startLocationOrUpdateCallBack(){
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(p0: LocationResult?) {
+                super.onLocationResult(p0)
+                currentLocation = p0!!.lastLocation
+                Log.d("Home current",p0.lastLocation.toString())
+
+            }
+
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if(resultCode == PLACE_PICKER_REQUEST_RESERVATION_DEPART){
+            if (resultCode == Activity.RESULT_OK && data!=null){
+                if(departMarkerMesRequetes != null)
+                    departMarkerMesRequetes!!.remove()
+                if(destinationMarkerMesRequetes != null)
+                    destinationMarkerMesRequetes!!.remove()
+
+                val adresseData = data.getParcelableExtra<AddressData>(Constants.ADDRESS_INTENT)
+
+                if(destinationMarker != null)
+                    destinationMarker!!.remove()
+
+                val latlong = LatLng(adresseData.latitude,adresseData.longitude)
+
+                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong,13f))
+                val cameraPosition =CameraPosition.Builder()
+                    .target(latlong)
+                    .zoom(15f)
+                    .build()
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+
+                if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
+//                    departMarkerReservation.remove();
+//                    destinationMarkerReservation.remove();
+                    tabLocation.clear();
+                    if(departMarkerReservation != null)
+                        departMarkerReservation!!.remove();
+                    if(destinationMarkerReservation != null)
+                        destinationMarkerReservation!!.remove();
+                    //if(currentPolyline != null)
+                       // currentPolyline.remove();
+                }
+
+                if(departLocationReservation != null && destinationLocationReservation != null){
+                    departLocationReservation.setLatitude(adresseData.latitude)
+                    departLocationReservation.setLongitude(adresseData.longitude)
+                    tabLocation!!.add(departLocationReservation);
+                    if(departMarkerReservation != null)
+                        departMarkerReservation!!.remove()
+                    addMarkerDepar(LatLng(adresseData.latitude,adresseData.longitude));
+
+                    if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                        //showProgressDialog();
+                        //M.setCurrentFragment("home",context);
+                       // new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
+//                        BottomSheetFragmentRequeteFacturation bottomSheetFragmentBooking = new BottomSheetFragmentRequeteFacturation(getActivity(), departLocationReservation, destinationLocationReservation);
+//                        bottomSheetFragmentBooking.show(((FragmentActivity) context).getSupportFragmentManager(), bottomSheetFragmentBooking.getTag());
+                    }
+                }
+                input_text_depart!!.setText(requireContext().resources.getString(R.string.point_de_depart));
+
+                try {
+                    val geo = Geocoder(requireContext(),Locale.getDefault())
+                    val addresses = geo.getFromLocation(latlong.latitude,latlong.longitude,1)
+                    if(addresses.isNotEmpty()){
+                        val address = addresses[0].getAddressLine(0)
+                        if(address != ""){
+                            val tabAdress = address.split(",")
+                            input_text_depart!!.setText(tabAdress[0])
+                        }
+                    }
+                }catch (e:IOException){
+                    e.printStackTrace()
+                }
+
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+
 }
 

@@ -65,7 +65,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.18'
     implementation 'com.squareup.retrofit2:converter-scalars:2.9.0'
     //Dexter Permission
-    implementation 'com.karumi:dexter:6.1.2'
+    implementation 'com.karumi:dexter:6.2.0'
     //ViewPager
     implementation "androidx.viewpager2:viewpager2:1.0.0"
     //Code Pays
@@ -74,6 +74,7 @@ dependencies {
     implementation 'com.github.d-max:spots-dialog:1.1@aar'
     //GreenRobot
     implementation 'org.greenrobot:eventbus:3.2.0'
+    implementation 'com.sucho:placepicker:1.1.1'
     implementation 'com.google.android.libraries.places:places:2.3.0'
     implementation 'com.google.android.gms:play-services-location:17.0.0'
 
