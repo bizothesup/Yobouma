@@ -55,12 +55,13 @@ import com.sucho.placepicker.Constants
 import com.sucho.placepicker.MapType
 import com.sucho.placepicker.PlacePicker
 import net.mbs.ybma.R
+import net.mbs.ybma.assync.FetchURL
+import net.mbs.ybma.commons.HelperUrl
 import net.mbs.ybma.commons.SessionUser
 import java.io.IOException
 import java.util.*
 
-class HomeFragment : Fragment(), OnMapReadyCallback{
-
+class HomeFragment : Fragment(), OnMapReadyCallback {
 
 
     private lateinit var homeViewModel: HomeViewModel
@@ -83,14 +84,13 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
     var departMarkerMesReservations: Marker? = null
     var currentMarker: Marker? = null
-    var destinationMarker:Marker? = null
+    var destinationMarker: Marker? = null
 
     var departMarkerReservation: Marker? = null
-    var destinationMarkerReservation:Marker? = null
+    var destinationMarkerReservation: Marker? = null
 
     var departMarkerMesRequetes: Marker? = null
-    var destinationMarkerMesRequetes:Marker? = null
-
+    var destinationMarkerMesRequetes: Marker? = null
 
 
     //View
@@ -98,20 +98,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
     var input_text_depart: EditText? = null
     var input_text_arrivee: EditText? = null
     var my_location: ImageView? = null
-    var chose_my_location: ImageView?=null
-    var choose_my_location_destination:ImageView?=null
+    var chose_my_location: ImageView? = null
+    var choose_my_location_destination: ImageView? = null
 
     //Google Api Client
-    private lateinit var fusedLocationProviderClient:FusedLocationProviderClient
-    private lateinit var locationRequest:LocationRequest
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
     private var locationUpdateState = false
 
-    companion object{
+    companion object {
         private var PLACE_PICKER_REQUEST_RESERVATION_DEPART = 101
         private var PLACE_PICKER_REQUEST_RESERVATION_DESTINATION = 102
-        private const val FAST_INTERVAL: Long=5000
-        private const val UPDATE_INTERVAL: Long=5000
+        private const val FAST_INTERVAL: Long = 5000
+        private const val UPDATE_INTERVAL: Long = 5000
         private const val REQUEST_CHECK_SETTINGS = 2
     }
 
@@ -150,12 +150,14 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         mapView = mapFragment.view
         mapFragment.getMapAsync(this)
 
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        fusedLocationProviderClient =
+            LocationServices.getFusedLocationProviderClient(requireActivity())
 
         //Element view Init
         my_location = root.findViewById(R.id.my_location) as ImageView
         chose_my_location = root.findViewById(R.id.chose_my_location) as ImageView
-        choose_my_location_destination = root.findViewById(R.id.choose_my_location_destination) as ImageView
+        choose_my_location_destination =
+            root.findViewById(R.id.choose_my_location_destination) as ImageView
 
 
         //Init Coordornnée
@@ -211,7 +213,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                 if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
                     departMarkerMesRequetes!!.remove()
                     destinationMarkerMesRequetes!!.remove()
-                   // currentPolyline.remove()
+                    // currentPolyline.remove()
                 }
 
                 //recuperation localisation depart
@@ -220,25 +222,25 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     input_text_depart!!.setText(place.name)
 
                 //ajouter Marker depart
-                if(destinationMarker != null)
+                if (destinationMarker != null)
                     destinationMarker!!.remove()
-                if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
+                if ((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
 //                    departMarkerReservation.remove()
 //                    destinationMarkerReservation.remove()
                     tabLocation.clear()
-                    if(departMarkerReservation != null)
+                    if (departMarkerReservation != null)
                         departMarkerReservation!!.remove()
-                    if(destinationMarkerReservation != null)
+                    if (destinationMarkerReservation != null)
                         destinationMarkerReservation!!.remove()
                     //f(currentPolyline != null)
-                      //  currentPolyline.remove();
+                    //  currentPolyline.remove();
                 }
 
-                if(departLocationReservation != null && destinationLocationReservation != null){
+                if (departLocationReservation != null && destinationLocationReservation != null) {
                     departLocationReservation.latitude = latLng!!.latitude
                     departLocationReservation.longitude = latLng.longitude
                     tabLocation.add(departLocationReservation)
-                    if(departMarkerReservation != null)
+                    if (departMarkerReservation != null)
                         departMarkerReservation!!.remove()
                     addMarkerDepar(LatLng(latLng.latitude, latLng.longitude))
 
@@ -249,11 +251,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                         .target(latLng)
                         .zoom(15F)
                         //.bearing(90F)
-                       // .tilt(40F)
+                        // .tilt(40F)
                         .build()
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-
+                    if (departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                        //showProgressDialog();
+                        SessionUser.setCurrentFragment("home", requireContext());
+                        FetchURL(
+                            activity,
+                            "home"
+                        ).execute(
+                            getUrl(
+                                departMarkerReservation!!.position,
+                                destinationMarkerReservation!!.position,
+                                "driving"
+                            ), "driving"
+                        );
+                    }
                 }
 
 
@@ -267,7 +282,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         })
 
         //Init AutoComplete Fragment Arrivé
-        val autocomplete_fragment_arrive =  childFragmentManager.findFragmentById(R.id.autocomplete_fragment_arrivee) as AutocompleteSupportFragment
+        val autocomplete_fragment_arrive =
+            childFragmentManager.findFragmentById(R.id.autocomplete_fragment_arrivee) as AutocompleteSupportFragment
 
         autocomplete_fragment_arrive.setPlaceFields(
             mutableListOf(
@@ -306,7 +322,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     input_text_arrivee!!.setText(place.name)
 
                 //ajouter Marker depart
-                if(destinationMarker != null)
+                if (destinationMarker != null)
                     destinationMarker!!.remove()
 
                 //Positionnement camera
@@ -320,28 +336,28 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     .build()
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-                if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size> 1) {
+                if ((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
 //                    departMarkerReservation.remove()
 //                    destinationMarkerReservation.remove()
                     tabLocation.clear()
-                    if(departMarkerReservation != null)
+                    if (departMarkerReservation != null)
                         departMarkerReservation!!.remove()
-                    if(destinationMarkerReservation != null)
+                    if (destinationMarkerReservation != null)
                         destinationMarkerReservation!!.remove()
                     //if(currentPolyline != null)
-                       // currentPolyline.remove();
+                    // currentPolyline.remove();
                 }
 
-                if(departLocationReservation != null && destinationLocationReservation != null){
+                if (departLocationReservation != null && destinationLocationReservation != null) {
                     destinationLocationReservation.latitude = latLng!!.latitude
                     destinationLocationReservation.longitude = latLng.longitude
                     tabLocation.add(destinationLocationReservation)
-                    if(destinationMarkerReservation != null)
+                    if (destinationMarkerReservation != null)
                         destinationMarkerReservation!!.remove()
-                    addMarkerDestination(LatLng(latLng.latitude,latLng.longitude))
+                    addMarkerDestination(LatLng(latLng.latitude, latLng.longitude))
 
 //                    Toast.makeText(context, ""+tabLocation.size(), Toast.LENGTH_SHORT).show();
-                    if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                    if (departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
                         //showProgressDialog();
                         //M.setCurrentFragment("home",context);
                         //new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
@@ -365,7 +381,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
             else {
                 if (currentLocation != null) {
                     //clean reservationMarker
-                    if(departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
+                    if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
                         departMarkerMesRequetes!!.remove()
                         destinationMarkerMesRequetes!!.remove()
                         //currentPolyline.remove();
@@ -407,24 +423,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     }
 
                     //Add Marker
-                    if(destinationMarker != null)
+                    if (destinationMarker != null)
                         destinationMarker!!.remove()
-                    if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size> 1) {
+                    if ((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
 //                            departMarkerReservation.remove();
 //                            destinationMarkerReservation.remove();
                         tabLocation.clear()
-                        if(departMarkerReservation != null)
+                        if (departMarkerReservation != null)
                             departMarkerReservation!!.remove()
-                        if(destinationMarkerReservation != null)
+                        if (destinationMarkerReservation != null)
                             destinationMarkerReservation!!.remove()
                         //if(currentPolyline != null)
-                          //  currentPolyline.remove();
+                        //  currentPolyline.remove();
                     }
-                    if(departLocationReservation != null && destinationLocationReservation != null){
+                    if (departLocationReservation != null && destinationLocationReservation != null) {
                         departLocationReservation.latitude = latLng.latitude
                         departLocationReservation.longitude = latLng.longitude
                         tabLocation.add(departLocationReservation)
-                        if(departMarkerReservation != null)
+                        if (departMarkerReservation != null)
                             departMarkerReservation!!.remove()
                         addMarkerDepar(latLng)
 
@@ -437,26 +453,32 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
         //Show PlacePiker
         chose_my_location!!.setOnClickListener {
-            if(departLocationReservation !=null){
-               val intent = PlacePicker.IntentBuilder()
-                   .setLatLong(departLocationReservation.latitude,departLocationReservation.longitude) //init Map à l'entrer
-                   .showLatLong(true) //afficher lat/long dans l'Activite
-                   .setMapZoom(16f) //zoom par defaut est 14.0f
-                   .setAddressRequired(true) //Définir si renvoyer uniquement les coordonnées si impossible de récupérer l'adresse pour les coordonnées. Par défaut: vrai
-                   .hideMarkerShadow(true) // Masque l'ombre sous le marqueur de carte Départ. Par défaut: Faux
-                   .setMarkerDrawable(R.drawable.ic_pin) // Change the default Marker Image
-                   .setMarkerImageImageColor(R.color.grisGooglePlay)
-                   .setFabColor(R.color.colorYellowDark)
-                   .setPrimaryTextColor(R.color.colorLogoBlack) // Change text color of Shortened Address
-                   .setSecondaryTextColor(R.color.colorLogoBlack) // Change text color of full Address
-                   .setMapType(MapType.NORMAL)
-                   .onlyCoordinates(true)  //Get only Coordinates from Place Picker
-                   .build(requireActivity())
+            if (departLocationReservation != null) {
+                val intent = PlacePicker.IntentBuilder()
+                    .setLatLong(
+                        departLocationReservation.latitude,
+                        departLocationReservation.longitude
+                    ) //init Map à l'entrer
+                    .showLatLong(true) //afficher lat/long dans l'Activite
+                    .setMapZoom(16f) //zoom par defaut est 14.0f
+                    .setAddressRequired(true) //Définir si renvoyer uniquement les coordonnées si impossible de récupérer l'adresse pour les coordonnées. Par défaut: vrai
+                    .hideMarkerShadow(true) // Masque l'ombre sous le marqueur de carte Départ. Par défaut: Faux
+                    .setMarkerDrawable(R.drawable.ic_pin) // Change the default Marker Image
+                    .setMarkerImageImageColor(R.color.grisGooglePlay)
+                    .setFabColor(R.color.colorYellowDark)
+                    .setPrimaryTextColor(R.color.colorLogoBlack) // Change text color of Shortened Address
+                    .setSecondaryTextColor(R.color.colorLogoBlack) // Change text color of full Address
+                    .setMapType(MapType.NORMAL)
+                    .onlyCoordinates(true)  //Get only Coordinates from Place Picker
+                    .build(requireActivity())
 
                 startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DEPART)
-            }else{
-                val intent =PlacePicker.IntentBuilder()
-                    .setLatLong(12.647378,-7.942810)  // Initial Latitude and Longitude the Map will load into
+            } else {
+                val intent = PlacePicker.IntentBuilder()
+                    .setLatLong(
+                        12.647378,
+                        -7.942810
+                    )  // Initial Latitude and Longitude the Map will load into
                     .showLatLong(true)  // Show Coordinates in the Activity
                     .setMapZoom(15.0f)  // Map Zoom Level. Default: 14.0
                     .setAddressRequired(true) // Set If return only Coordinates if cannot fetch Address for the coordinates. Default: True
@@ -472,16 +494,19 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                 startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DEPART)
             }
         }
-        choose_my_location_destination !!.setOnClickListener {
-            if(destinationLocationReservation !=null){
+        choose_my_location_destination!!.setOnClickListener {
+            if (destinationLocationReservation != null) {
                 val intent = PlacePicker.IntentBuilder()
-                    .setLatLong(destinationLocationReservation.latitude,destinationLocationReservation.longitude) //init Map à l'entrer
+                    .setLatLong(
+                        destinationLocationReservation.latitude,
+                        destinationLocationReservation.longitude
+                    ) //init Map à l'entrer
                     .showLatLong(true) //afficher lat/long dans l'Activite
                     .setMapZoom(16f) //zoom par defaut est 14.0f
                     .setAddressRequired(true) //Définir si renvoyer uniquement les coordonnées si impossible de récupérer l'adresse pour les coordonnées. Par défaut: vrai
                     .hideMarkerShadow(true) // Masque l'ombre sous le marqueur de carte Départ. Par défaut: Faux
                     .setMarkerDrawable(R.drawable.ic_arrival_point_2) // Change the default Marker Image
-                   // .setMarkerImageImageColor(R.color.grisGooglePlay)
+                    // .setMarkerImageImageColor(R.color.grisGooglePlay)
                     .setFabColor(R.color.colorYellowDark)
                     .setPrimaryTextColor(R.color.colorLogoBlack) // Change text color of Shortened Address
                     .setSecondaryTextColor(R.color.colorLogoBlack) // Change text color of full Address
@@ -490,9 +515,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     .build(requireActivity())
 
                 startActivityForResult(intent, PLACE_PICKER_REQUEST_RESERVATION_DESTINATION)
-            }else{
-                val intent =PlacePicker.IntentBuilder()
-                    .setLatLong(12.647378,-7.942810)  // Initial Latitude and Longitude the Map will load into
+            } else {
+                val intent = PlacePicker.IntentBuilder()
+                    .setLatLong(
+                        12.647378,
+                        -7.942810
+                    )  // Initial Latitude and Longitude the Map will load into
                     .showLatLong(true)  // Show Coordinates in the Activity
                     .setMapZoom(15.0f)  // Map Zoom Level. Default: 14.0
                     .setAddressRequired(true) // Set If return only Coordinates if cannot fetch Address for the coordinates. Default: True
@@ -514,7 +542,6 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
     }
 
 
-
     override fun onMapReady(googleMap: GoogleMap?) {
         mMap = googleMap!!
         if (ActivityCompat.checkSelfPermission(
@@ -528,7 +555,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
             return
         }
-       mMap.isMyLocationEnabled = true
+        mMap.isMyLocationEnabled = true
 
         //Placer le button zoom position to bottom
         if (mapView != null && mapView!!.findViewById<View?>("1".toInt()) != null) {
@@ -555,7 +582,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
 
         // Initialize the location fields
-        Log.d("Home currenLocation",currentLocation.toString())
+        Log.d("Home currenLocation", currentLocation.toString())
         if (currentLocation != null) {
             val latLng = LatLng(currentLocation!!.latitude, currentLocation!!.longitude)
             mMap.animateCamera(
@@ -567,12 +594,12 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                 //                    .bearing(90)                // Sets the orientation of the camera to east
                 //                    .tilt(40)                   // Sets the tilt of the camera to 30 degrees
                 .build() // Creates a CameraPosition from the builder
-          mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
         }
 
-      mMap.setOnMapClickListener{
-          Toast.makeText(context, ""+it.toString(), Toast.LENGTH_SHORT).show()
-      }
+        mMap.setOnMapClickListener {
+            Toast.makeText(context, "" + it.toString(), Toast.LENGTH_SHORT).show()
+        }
 
     }
 
@@ -582,7 +609,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         grantResults: IntArray
     ) {
         when (requestCode) {
-            PLACE_PICKER_REQUEST_RESERVATION_DEPART-> {
+            PLACE_PICKER_REQUEST_RESERVATION_DEPART -> {
                 if (!isLocationEnabled(requireContext()))
                     dialogMessageActiverGPS()
                 return
@@ -591,48 +618,48 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if(requestCode == PLACE_PICKER_REQUEST_RESERVATION_DEPART){
-            if (resultCode == Activity.RESULT_OK && data!=null){
-                if(departMarkerMesRequetes != null)
+        if (requestCode == PLACE_PICKER_REQUEST_RESERVATION_DEPART) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                if (departMarkerMesRequetes != null)
                     departMarkerMesRequetes!!.remove()
-                if(destinationMarkerMesRequetes != null)
+                if (destinationMarkerMesRequetes != null)
                     destinationMarkerMesRequetes!!.remove()
 
                 val adresseData = data.getParcelableExtra<AddressData>(Constants.ADDRESS_INTENT)
 
-                if(destinationMarker != null)
+                if (destinationMarker != null)
                     destinationMarker!!.remove()
 
-                val latlong = LatLng(adresseData.latitude,adresseData.longitude)
+                val latlong = LatLng(adresseData.latitude, adresseData.longitude)
 
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong,13f))
-                val cameraPosition =CameraPosition.Builder()
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong, 13f))
+                val cameraPosition = CameraPosition.Builder()
                     .target(latlong)
                     .zoom(15f)
                     .build()
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-                if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
+                if ((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
 //                    departMarkerReservation.remove();
 //                    destinationMarkerReservation.remove();
                     tabLocation.clear();
-                    if(departMarkerReservation != null)
+                    if (departMarkerReservation != null)
                         departMarkerReservation!!.remove();
-                    if(destinationMarkerReservation != null)
+                    if (destinationMarkerReservation != null)
                         destinationMarkerReservation!!.remove();
                     //if(currentPolyline != null)
                     // currentPolyline.remove();
                 }
 
-                if(departLocationReservation != null && destinationLocationReservation != null){
+                if (departLocationReservation != null && destinationLocationReservation != null) {
                     departLocationReservation.setLatitude(adresseData.latitude)
                     departLocationReservation.setLongitude(adresseData.longitude)
                     tabLocation!!.add(departLocationReservation);
-                    if(departMarkerReservation != null)
+                    if (departMarkerReservation != null)
                         departMarkerReservation!!.remove()
-                    addMarkerDepar(LatLng(adresseData.latitude,adresseData.longitude));
+                    addMarkerDepar(LatLng(adresseData.latitude, adresseData.longitude));
 
-                    if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                    if (departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
                         //showProgressDialog();
                         //M.setCurrentFragment("home",context);
                         // new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
@@ -643,69 +670,69 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                 input_text_depart!!.setText(requireContext().resources.getString(R.string.point_de_depart));
 
                 try {
-                    val geo = Geocoder(requireContext(),Locale.getDefault())
-                    val addresses = geo.getFromLocation(latlong.latitude,latlong.longitude,1)
-                    if(addresses.isNotEmpty()){
+                    val geo = Geocoder(requireContext(), Locale.getDefault())
+                    val addresses = geo.getFromLocation(latlong.latitude, latlong.longitude, 1)
+                    if (addresses.isNotEmpty()) {
                         val address = addresses[0].getAddressLine(0)
-                        if(address != ""){
+                        if (address != "") {
                             val tabAdress = address.split(",")
                             input_text_depart!!.setText(tabAdress[0])
                         }
                     }
-                }catch (e:IOException){
+                } catch (e: IOException) {
                     e.printStackTrace()
                 }
 
-            }else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+            } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                 // TODO: Handle the error.
                 val status = Autocomplete.getStatusFromIntent(data!!);
                 Log.i("HOME ERROR", status.getStatusMessage());
             } else if (resultCode == RESULT_CANCELED) {
                 // The user canceled the operation.
             }
-        }else
-            if(requestCode==PLACE_PICKER_REQUEST_RESERVATION_DESTINATION){
-                if(resultCode==Activity.RESULT_OK && data!=null){
-                    if(departMarkerMesRequetes != null)
+        } else
+            if (requestCode == PLACE_PICKER_REQUEST_RESERVATION_DESTINATION) {
+                if (resultCode == Activity.RESULT_OK && data != null) {
+                    if (departMarkerMesRequetes != null)
                         departMarkerMesRequetes!!.remove()
-                    if(destinationMarkerMesRequetes != null)
+                    if (destinationMarkerMesRequetes != null)
                         destinationMarkerMesRequetes!!.remove()
 
                     val adresseData = data.getParcelableExtra<AddressData>(Constants.ADDRESS_INTENT)
 
-                    if(destinationMarker != null)
+                    if (destinationMarker != null)
                         destinationMarker!!.remove()
 
-                    val latlong = LatLng(adresseData.latitude,adresseData.longitude)
+                    val latlong = LatLng(adresseData.latitude, adresseData.longitude)
 
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong,13f))
-                    val cameraPosition =CameraPosition.Builder()
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latlong, 13f))
+                    val cameraPosition = CameraPosition.Builder()
                         .target(latlong)
                         .zoom(15f)
                         .build()
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
-                    if((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
-                       departMarkerReservation!!.remove();
-                       destinationMarkerReservation!!.remove();
+                    if ((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
+                        departMarkerReservation!!.remove();
+                        destinationMarkerReservation!!.remove();
                         tabLocation.clear();
-                        if(departMarkerReservation != null)
+                        if (departMarkerReservation != null)
                             departMarkerReservation!!.remove();
-                        if(destinationMarkerReservation != null)
+                        if (destinationMarkerReservation != null)
                             destinationMarkerReservation!!.remove();
                         //if(currentPolyline != null)
                         // currentPolyline.remove();
                     }
-                    if(departLocationReservation != null && destinationLocationReservation != null){
+                    if (departLocationReservation != null && destinationLocationReservation != null) {
                         destinationLocationReservation.latitude = adresseData.latitude;
                         destinationLocationReservation.longitude = adresseData.longitude;
                         tabLocation.add(departLocationReservation);
-                        if(destinationMarkerReservation != null)
+                        if (destinationMarkerReservation != null)
                             destinationMarkerReservation!!.remove();
 
-                        addMarkerDestination(LatLng(adresseData.latitude,adresseData.longitude));
+                        addMarkerDestination(LatLng(adresseData.latitude, adresseData.longitude));
 
-                        if(departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
+                        if (departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
                             //showProgressDialog();
                             //M.setCurrentFragment("home",context);
                             // new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
@@ -715,26 +742,26 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
                     }
                     input_text_arrivee!!.setText(requireContext().resources.getString(R.string.destination))
                     try {
-                        val geo = Geocoder(requireContext(),Locale.getDefault())
-                        val addresses = geo.getFromLocation(latlong.latitude,latlong.longitude,1)
-                        if(addresses.isNotEmpty()){
+                        val geo = Geocoder(requireContext(), Locale.getDefault())
+                        val addresses = geo.getFromLocation(latlong.latitude, latlong.longitude, 1)
+                        if (addresses.isNotEmpty()) {
                             val address = addresses[0].getAddressLine(0)
-                            if(address != ""){
+                            if (address != "") {
                                 val tabAdress = address.split(",")
                                 input_text_arrivee!!.setText(tabAdress[0])
                             }
                         }
-                    }catch (e:IOException){
+                    } catch (e: IOException) {
                         e.printStackTrace()
                     }
-                }else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+                } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
                     // TODO: Handle the error.
                     val status = Autocomplete.getStatusFromIntent(data!!);
                     Log.i("HOME ERROR", status.getStatusMessage());
                 } else if (resultCode == RESULT_CANCELED) {
                     // The user canceled the operation.
                 }
-            }else{
+            } else {
                 super.onActivityResult(requestCode, resultCode, data)
             }
 
@@ -746,12 +773,18 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         val markerOptions = MarkerOptions()
         markerOptions.title(resources.getString(R.string.depart))
         markerOptions.snippet(resources.getString(R.string.point_depart))
-       Log.d("Home LatLng",latLng.toString())
+        Log.d("Home LatLng", latLng.toString())
         markerOptions.position(latLng)
-        markerOptions.icon(generateBitmapDescriptorFromRes(requireContext(), R.drawable.ic_location_pin_1))
+        markerOptions.icon(
+            generateBitmapDescriptorFromRes(
+                requireContext(),
+                R.drawable.ic_location_pin_1
+            )
+        )
         departMarkerReservation = mMap.addMarker(markerOptions)
         departMarkerReservation!!.tag = resources.getString(R.string.depart)
     }
+
     private fun addMarkerDepar(latLng: LatLng) {
         //Ajouter Marker
         val markerOptions = MarkerOptions()
@@ -763,13 +796,19 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         departMarkerReservation!!.tag = resources.getString(R.string.depart)
 
     }
+
     private fun addMarkerDestination(latLng: LatLng) {
         //Ajouter Marker
         val markerOptions = MarkerOptions()
         markerOptions.title(resources.getString(R.string.arrivee))
         markerOptions.snippet(resources.getString(R.string.point_depart))
         markerOptions.position(latLng)
-        markerOptions.icon(generateBitmapDescriptorFromRes(requireContext(), R.drawable.ic_arrival_point_2))
+        markerOptions.icon(
+            generateBitmapDescriptorFromRes(
+                requireContext(),
+                R.drawable.ic_arrival_point_2
+            )
+        )
         destinationMarkerReservation = mMap.addMarker(markerOptions)
         destinationMarkerReservation!!.tag = resources.getString(R.string.arrive)
     }
@@ -828,8 +867,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
     }
 
     //Google Api start Location Or Update Request and callBack
-    private fun createLocationRequest(){
-        locationRequest= LocationRequest()
+    private fun createLocationRequest() {
+        locationRequest = LocationRequest()
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         locationRequest.interval = UPDATE_INTERVAL
         locationRequest.fastestInterval = FAST_INTERVAL
@@ -838,20 +877,20 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
 
         val client = LocationServices.getSettingsClient(requireContext())
-        val task =  client.checkLocationSettings(builder.build())
+        val task = client.checkLocationSettings(builder.build())
 
         task.addOnSuccessListener {
             locationUpdateState = true
             startLocationUpdates()
         }
-        task.addOnFailureListener {e ->  
-          if(e is ResolvableApiException){
-              try {
-                  e.startResolutionForResult(requireActivity(),REQUEST_CHECK_SETTINGS)
-              }catch (sendex: IntentSender.SendIntentException){
+        task.addOnFailureListener { e ->
+            if (e is ResolvableApiException) {
+                try {
+                    e.startResolutionForResult(requireActivity(), REQUEST_CHECK_SETTINGS)
+                } catch (sendex: IntentSender.SendIntentException) {
 
-              }
-          }
+                }
+            }
         }
 
     }
@@ -868,23 +907,43 @@ class HomeFragment : Fragment(), OnMapReadyCallback{
 
             return
         }
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest,locationCallback,
-            Looper.myLooper())
+        fusedLocationProviderClient.requestLocationUpdates(
+            locationRequest, locationCallback,
+            Looper.myLooper()
+        )
     }
 
-    private fun  startLocationOrUpdateCallBack(){
+    private fun startLocationOrUpdateCallBack() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult?) {
                 super.onLocationResult(p0)
                 currentLocation = p0!!.lastLocation
-                Log.d("Home current",p0.lastLocation.toString())
+                Log.d("Home current", p0.lastLocation.toString())
 
             }
 
         }
     }
 
-
+    ///Show Method to direction
+    private fun getUrl(origin: LatLng?, dest: LatLng?, directionModel: String): String {
+        // Origin  route
+        val str_origin = "origin=" + origin!!.latitude + "," + origin.longitude
+        //destination  route
+        val str_dest = "destination=" + dest!!.latitude + "," + dest.longitude
+        //Mode Transport
+        val mode = "mode=" + directionModel
+        //Création des paramètres du service Web
+        val parameters = str_origin + "&" + str_dest + "&" + mode
+        //format ouput
+        val str_ouput = "json"
+        //Création de l'URL du service Web
+        val url =
+            HelperUrl.URL_GOOGLE_MAP_DIRECTION + str_ouput + "?" + parameters + "&key=" + requireContext().resources.getString(
+                R.string.google_maps_key
+            )
+        return url
+    }
 
 
 }
