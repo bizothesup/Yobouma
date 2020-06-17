@@ -9,20 +9,24 @@ import android.provider.Settings
 import android.util.Log
 import android.view.Window
 import android.view.WindowManager
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import com.google.firebase.iid.FirebaseInstanceId
-import kotlinx.android.synthetic.main.activity_inscription.*
+import net.mbs.ybma.assync.FetchURL
 import net.mbs.ybma.models.User
 import net.mbs.ybma.retrofit.IUserClients
 import net.mbs.ybma.retrofit.RetrofitAppClient
 import net.mbs.ybma.retrofit.response.UserResponse
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 object HelperCommon {
     var fcm_id: String? = null
+    private var distance: String? = null
+    private  var duration:String? = null
 
     @RequiresApi(Build.VERSION_CODES.M)
     fun isOnline(context: Context): Boolean {
@@ -118,5 +122,13 @@ object HelperCommon {
                 Log.d("Set UPDATE FCM", "Mbs Update FCM  ${response.body()!!.message}")
             }
         })
+    }
+
+    //Parse Direction distance Bicycling
+
+
+    //ParseRoute Distance
+    fun parseRouteDistance(jsonObject: JSONObject) {
+
     }
 }

@@ -1,7 +1,6 @@
 package net.mbs.ybma.fragment.ui.home
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Activity.LOCATION_SERVICE
 import android.app.Activity.RESULT_CANCELED
@@ -28,6 +27,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProviders
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.common.api.Status
@@ -44,12 +44,6 @@ import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.AutocompleteActivity
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
-import com.karumi.dexter.Dexter
-import com.karumi.dexter.DexterBuilder
-import com.karumi.dexter.MultiplePermissionsReport
-import com.karumi.dexter.PermissionToken
-import com.karumi.dexter.listener.PermissionRequest
-import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import com.sucho.placepicker.AddressData
 import com.sucho.placepicker.Constants
 import com.sucho.placepicker.MapType
@@ -58,11 +52,107 @@ import net.mbs.ybma.R
 import net.mbs.ybma.assync.FetchURL
 import net.mbs.ybma.commons.HelperUrl
 import net.mbs.ybma.commons.SessionUser
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 
 class HomeFragment : Fragment(), OnMapReadyCallback {
 
+    companion object {
+        fun parseRouteDistanceBicycling(jsonObject: JSONObject) {
+            val jRoute : JSONArray
+            var jLegs : JSONArray
+            try {
+                jRoute=jsonObject.getJSONArray("routes")
+                /**Traverser tous les itinéraires**/
+                /** Traversing all routes  */
+                for (i in 0 until jRoute.length()) {
+                    jLegs = (jRoute.get(i) as JSONObject).getJSONArray("legs")
+                    /** Traversing all legs  */
+                    for (j in 0 until jLegs.length()) {
+                        distance = (jLegs[j] as JSONObject).getJSONObject("distance").getString("text")
+                        duration = (jLegs[j] as JSONObject).getJSONObject("duration").getString("text")
+                        durationBicicling = duration
+                    }
+                }
+            }catch (e: JSONException){
+                e.printStackTrace()
+            }catch (e:Exception){
+                //e.printStackTrace()
+            }
+
+        }
+
+        fun parseRouteDistance(jObject: JSONObject) {
+            val jRoutes: JSONArray
+            var jLegs: JSONArray
+            try {
+                //dismissProgressDialog()
+                jRoutes = jObject.getJSONArray("routes")
+                /** Traversing all routes  */
+                for (i in 0 until jRoutes.length()) {
+                    jLegs = (jRoutes[i] as JSONObject).getJSONArray("legs")
+                    /** Traversing all legs  */
+                    for (j in 0 until jLegs.length()) {
+                        distance = (jLegs[j] as JSONObject).getJSONObject("distance").getString("text")
+                        duration = (jLegs[j] as JSONObject).getJSONObject("duration").getString("text")
+                        durationDriving = duration!!
+                        FetchURL(activityContextHome, "home").execute(getUrl(
+                            departMarkerReservation!!.position,
+                            destinationMarkerReservation!!.position,
+                            "driving"), "driving")
+                    }
+                }
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            } catch (e: java.lang.Exception) {
+            }
+        }
+
+        private fun getUrl(origin: LatLng?, dest: LatLng?, directionModel: String): String {
+            // Origin  route
+            val str_origin = "origin=" + origin!!.latitude + "," + origin.longitude
+            //destination  route
+            val str_dest = "destination=" + dest!!.latitude + "," + dest.longitude
+            //Mode Transport
+            val mode = "mode="+ directionModel
+            //Création des paramètres du service Web
+            val parameters = str_origin + "&" + str_dest + "&" + mode
+            //format ouput
+            val str_ouput = "json"
+            //Création de l'URL du service Web
+            val url =
+                HelperUrl.URL_GOOGLE_MAP_DIRECTION + str_ouput + "?" + parameters + "&key=" + activityContextHome!!.resources.getString(
+                    R.string.google_maps_key
+                )
+            return url
+        }
+
+
+        private var activityContextHome: Context?=null
+
+        //Marker
+        var currentMarker: Marker? = null
+        var destinationMarker: Marker? = null
+        var departMarkerReservation: Marker? = null
+        var destinationMarkerReservation: Marker? = null
+        var departMarkerMesRequetes: Marker? = null
+        var destinationMarkerMesRequetes: Marker? = null
+        private var durationBicicling: String? = ""
+        private var durationDriving = ""
+        private var distance: String? = null
+        private var duration:String? = null
+        var currentPolyline: Polyline? = null
+        private var PLACE_PICKER_REQUEST_RESERVATION_DEPART = 101
+        private var PLACE_PICKER_REQUEST_RESERVATION_DESTINATION = 102
+        private const val FAST_INTERVAL: Long = 5000
+        private const val UPDATE_INTERVAL: Long = 5000
+        private const val REQUEST_CHECK_SETTINGS = 2
+        var tabLocation = ArrayList<Location>()
+
+    }
 
     private lateinit var homeViewModel: HomeViewModel
 
@@ -71,35 +161,29 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private var places: PlacesClient? = null
 
     //Location
-    var currentLocation: Location? = null
-    var destinationLocation = Location("dummyprovider1")
-    var departLocationReservation = Location("dummyprovider2")
-    var destinationLocationReservation = Location("dummyprovider3")
-    var departLocationMesRequetes = Location("dummyprovider2")
-    var destinationLocationMesRequetes = Location("dummyprovider3")
-    var tabLocation = ArrayList<Location>()
+    private var currentLocation: Location? = null
+    private var destinationLocation = Location("dummyprovider1")
+    private var departLocationReservation = Location("dummyprovider2")
+    private  var destinationLocationReservation = Location("dummyprovider3")
+    private  var departLocationMesRequetes = Location("dummyprovider2")
+    private var destinationLocationMesRequetes = Location("dummyprovider3")
+  
+
 
 
     //Marker depart
 
-    var departMarkerMesReservations: Marker? = null
-    var currentMarker: Marker? = null
-    var destinationMarker: Marker? = null
 
-    var departMarkerReservation: Marker? = null
-    var destinationMarkerReservation: Marker? = null
 
-    var departMarkerMesRequetes: Marker? = null
-    var destinationMarkerMesRequetes: Marker? = null
-
+    //direction googleApi
 
     //View
-    var mapView: View? = null
+    private var mapView: View? = null
     var input_text_depart: EditText? = null
     var input_text_arrivee: EditText? = null
-    var my_location: ImageView? = null
-    var chose_my_location: ImageView? = null
-    var choose_my_location_destination: ImageView? = null
+    private var my_location: ImageView? = null
+    private var chose_my_location: ImageView? = null
+    private var choose_my_location_destination: ImageView? = null
 
     //Google Api Client
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -107,13 +191,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     private lateinit var locationCallback: LocationCallback
     private var locationUpdateState = false
 
-    companion object {
-        private var PLACE_PICKER_REQUEST_RESERVATION_DEPART = 101
-        private var PLACE_PICKER_REQUEST_RESERVATION_DESTINATION = 102
-        private const val FAST_INTERVAL: Long = 5000
-        private const val UPDATE_INTERVAL: Long = 5000
-        private const val REQUEST_CHECK_SETTINGS = 2
-    }
+
 
     override fun onStart() {
         super.onStart()
@@ -143,6 +221,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         homeViewModel =
             ViewModelProviders.of(this).get(HomeViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_home, container, false)
+
+        activityContextHome = requireContext()
 
         //Carte Map
         val mapFragment = childFragmentManager
@@ -209,33 +289,32 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         ///Listerner des Places write to interfaces
         autocomplete_fragment_depart.setOnPlaceSelectedListener(object : PlaceSelectionListener {
             override fun onPlaceSelected(place: Place) {
-                Log.i("Home PlaceListener ", "Place: " + place.name + ", " + place.latLng)
                 if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
                     departMarkerMesRequetes!!.remove()
                     destinationMarkerMesRequetes!!.remove()
-                    // currentPolyline.remove()
+                    currentPolyline!!.remove()
                 }
 
-                //recuperation localisation depart
                 val latLng = place.latLng
-                if (place.name!!.trim().isNotEmpty())
+                val name = place.name
+//                Toast.makeText(context, ""+latLng.latitude+" "+name, Toast.LENGTH_SHORT).show();
+                //                Toast.makeText(context, ""+latLng.latitude+" "+name, Toast.LENGTH_SHORT).show();
+                if (place.name!!.trim { it <= ' ' }.isNotEmpty())
                     input_text_depart!!.setText(place.name)
 
-                //ajouter Marker depart
                 if (destinationMarker != null)
                     destinationMarker!!.remove()
-                if ((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
-//                    departMarkerReservation.remove()
-//                    destinationMarkerReservation.remove()
-                    tabLocation.clear()
+                if (departLocationReservation != null && destinationLocationReservation != null && tabLocation.size > 1) {
+//                    departMarkerReservation.remove();
+//                    destinationMarkerReservation.remove();
+                        tabLocation.clear()
                     if (departMarkerReservation != null)
                         departMarkerReservation!!.remove()
                     if (destinationMarkerReservation != null)
                         destinationMarkerReservation!!.remove()
-                    //f(currentPolyline != null)
-                    //  currentPolyline.remove();
+                    if (currentPolyline != null)
+                        currentPolyline!!.remove()
                 }
-
                 if (departLocationReservation != null && destinationLocationReservation != null) {
                     departLocationReservation.latitude = latLng!!.latitude
                     departLocationReservation.longitude = latLng.longitude
@@ -244,35 +323,29 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                         departMarkerReservation!!.remove()
                     addMarkerDepar(LatLng(latLng.latitude, latLng.longitude))
 
-                    //Positionnement camera
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13F))
+                   mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13f))
 
                     val cameraPosition = CameraPosition.Builder()
-                        .target(latLng)
-                        .zoom(15F)
-                        //.bearing(90F)
-                        // .tilt(40F)
-                        .build()
+                        .target(latLng) // Sets the center of the map to location user
+                        .zoom(15f) // Sets the zoom
+                        //                    .bearing(90)                // Sets the orientation of the camera to east
+                        //                    .tilt(40)                   // Sets the tilt of the camera to 30 degrees
+                        .build() // Creates a CameraPosition from the builder
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
-
-                    if (departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
-                        //showProgressDialog();
-                        SessionUser.setCurrentFragment("home", requireContext());
+                    if (departMarkerReservation != null && destinationMarkerReservation != null
+                        && tabLocation.size > 1) {
+                        //showProgressDialog()
+                        SessionUser.setCurrentFragment("home", requireContext())
                         FetchURL(
                             activity,
                             "home"
-                        ).execute(
-                            getUrl(
-                                departMarkerReservation!!.position,
+                        ).execute(getUrl(departMarkerReservation!!.position,
                                 destinationMarkerReservation!!.position,
                                 "driving"
                             ), "driving"
-                        );
+                        )
                     }
                 }
-
-
-                Log.i("Home PlaceListener ", "Place: " + place.name + ", " + place.id)
             }
 
             override fun onError(status: Status) {
@@ -313,57 +386,73 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 if (departMarkerMesRequetes != null && destinationMarkerMesRequetes != null) {
                     departMarkerMesRequetes!!.remove()
                     destinationMarkerMesRequetes!!.remove()
-                    // currentPolyline.remove()
+                    currentPolyline!!.remove()
                 }
 
-                //recuperation localisation depart
                 val latLng = place.latLng
-                if (place.name!!.trim().isNotEmpty())
+                val name = place.name
+//                Toast.makeText(context, ""+latLng.latitude+" "+name, Toast.LENGTH_SHORT).show();
+                //                Toast.makeText(context, ""+latLng.latitude+" "+name, Toast.LENGTH_SHORT).show();
+                if (place.name!!.trim { it <= ' ' }.isNotEmpty())
                     input_text_arrivee!!.setText(place.name)
 
-                //ajouter Marker depart
-                if (destinationMarker != null)
-                    destinationMarker!!.remove()
+                if (destinationMarker != null) destinationMarker!!.remove()
 
-                //Positionnement camera
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 13F))
-
+                mMap.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(latLng, 13f)
+                )
                 val cameraPosition = CameraPosition.Builder()
-                    .target(latLng)
-                    .zoom(15F)
-                    //.bearing(90F)
-                    //.tilt(40F)
-                    .build()
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
+                    .target(latLng) // Sets the center of the map to location user
+                    .zoom(15f) // Sets the zoom
+                    //                    .bearing(90)                // Sets the orientation of the camera to east
+                    //                    .tilt(40)                   // Sets the tilt of the camera to 30 degrees
+                    .build() // Creates a CameraPosition from the builder
 
-                if ((departLocationReservation != null && destinationLocationReservation != null) && tabLocation.size > 1) {
-//                    departMarkerReservation.remove()
-//                    destinationMarkerReservation.remove()
-                    tabLocation.clear()
+                mMap.animateCamera(
+                    CameraUpdateFactory.newCameraPosition(cameraPosition)
+                )
+
+                if (departLocationReservation != null && destinationLocationReservation != null && tabLocation.size > 1) {
+//                    departMarkerReservation.remove();
+//                    destinationMarkerReservation.remove();
+                     tabLocation.clear()
                     if (departMarkerReservation != null)
                         departMarkerReservation!!.remove()
                     if (destinationMarkerReservation != null)
                         destinationMarkerReservation!!.remove()
-                    //if(currentPolyline != null)
-                    // currentPolyline.remove();
+                    if (currentPolyline != null)
+                        currentPolyline!!.remove()
                 }
-
                 if (departLocationReservation != null && destinationLocationReservation != null) {
-                    destinationLocationReservation.latitude = latLng!!.latitude
-                    destinationLocationReservation.longitude = latLng.longitude
+                    destinationLocationReservation.setLatitude(
+                        latLng!!.latitude
+                    )
+                    destinationLocationReservation.setLongitude(
+                        latLng.longitude
+                    )
                     tabLocation.add(destinationLocationReservation)
                     if (destinationMarkerReservation != null)
                         destinationMarkerReservation!!.remove()
-                    addMarkerDestination(LatLng(latLng.latitude, latLng.longitude))
+                    addMarkerDestination(
+                        LatLng(latLng.latitude, latLng.longitude)
+                    )
 
 //                    Toast.makeText(context, ""+tabLocation.size(), Toast.LENGTH_SHORT).show();
                     if (departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
-                        //showProgressDialog();
-                        //M.setCurrentFragment("home",context);
-                        //new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
+                        //showProgressDialog()
+                        SessionUser.setCurrentFragment(
+                            "home",
+                           requireContext()
+                        )
+                        FetchURL(
+                            activity,
+                            "home"
+                        ).execute(getUrl(departMarkerReservation!!.getPosition(),destinationMarkerReservation!!.getPosition(),
+                                "driving"
+                            ), "driving"
+                        )
                     }
                 }
-
 
             }
 
@@ -684,11 +773,10 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                 }
 
             } else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
-                // TODO: Handle the error.
                 val status = Autocomplete.getStatusFromIntent(data!!);
                 Log.i("HOME ERROR", status.getStatusMessage());
             } else if (resultCode == RESULT_CANCELED) {
-                // The user canceled the operation.
+
             }
         } else
             if (requestCode == PLACE_PICKER_REQUEST_RESERVATION_DESTINATION) {
@@ -926,24 +1014,8 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
     }
 
     ///Show Method to direction
-    private fun getUrl(origin: LatLng?, dest: LatLng?, directionModel: String): String {
-        // Origin  route
-        val str_origin = "origin=" + origin!!.latitude + "," + origin.longitude
-        //destination  route
-        val str_dest = "destination=" + dest!!.latitude + "," + dest.longitude
-        //Mode Transport
-        val mode = "mode=" + directionModel
-        //Création des paramètres du service Web
-        val parameters = str_origin + "&" + str_dest + "&" + mode
-        //format ouput
-        val str_ouput = "json"
-        //Création de l'URL du service Web
-        val url =
-            HelperUrl.URL_GOOGLE_MAP_DIRECTION + str_ouput + "?" + parameters + "&key=" + requireContext().resources.getString(
-                R.string.google_maps_key
-            )
-        return url
-    }
+
+    //Tour pour bicycle*
 
 
 }
