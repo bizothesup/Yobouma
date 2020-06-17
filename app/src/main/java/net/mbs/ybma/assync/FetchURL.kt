@@ -3,8 +3,6 @@ package net.mbs.ybma.assync
 import android.content.Context
 import android.os.AsyncTask
 import android.util.Log
-import androidx.fragment.app.FragmentActivity
-import net.mbs.ybma.commons.HelperCommon
 import net.mbs.ybma.fragment.ui.home.HomeFragment
 import org.json.JSONException
 import org.json.JSONObject
@@ -31,7 +29,7 @@ class FetchURL(var context: Context?, var categorie: String): AsyncTask<String, 
 
     override fun onPostExecute(s: String?) {
         super.onPostExecute(s)
-        var parserTask = PointsParser(context, directionMode, categorie)
+        var parserTask = PointsParser(context!!, directionMode, categorie)
         // Invokes the thread for parsing the JSON data
         parserTask.execute(s)
         try {

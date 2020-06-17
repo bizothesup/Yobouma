@@ -131,6 +131,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         }
 
 
+        lateinit var mMap: GoogleMap
         private var activityContextHome: Context?=null
 
         //Marker
@@ -151,23 +152,24 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
         private const val UPDATE_INTERVAL: Long = 5000
         private const val REQUEST_CHECK_SETTINGS = 2
         var tabLocation = ArrayList<Location>()
+        //Location
+        var currentLocation: Location? = null
+         var destinationLocation = Location("dummyprovider1")
+         var departLocationReservation = Location("dummyprovider2")
+         var destinationLocationReservation = Location("dummyprovider3")
+         var departLocationMesRequetes = Location("dummyprovider2")
+         var destinationLocationMesRequetes = Location("dummyprovider3")
 
     }
 
     private lateinit var homeViewModel: HomeViewModel
 
     //GoogleMap
-    private lateinit var mMap: GoogleMap
+
     private var places: PlacesClient? = null
 
-    //Location
-    private var currentLocation: Location? = null
-    private var destinationLocation = Location("dummyprovider1")
-    private var departLocationReservation = Location("dummyprovider2")
-    private  var destinationLocationReservation = Location("dummyprovider3")
-    private  var departLocationMesRequetes = Location("dummyprovider2")
-    private var destinationLocationMesRequetes = Location("dummyprovider3")
-  
+
+
 
 
 
@@ -751,7 +753,7 @@ class HomeFragment : Fragment(), OnMapReadyCallback {
                     if (departMarkerReservation != null && destinationMarkerReservation != null && tabLocation.size > 1) {
                         //showProgressDialog();
                         //M.setCurrentFragment("home",context);
-                        // new FetchURL(getActivity(),"home").execute(getUrl(departMarkerReservation.getPosition(), destinationMarkerReservation.getPosition(), "driving"), "driving");
+                          FetchURL(activity,"home").execute(getUrl(departMarkerReservation!!.getPosition(), destinationMarkerReservation!!.getPosition(), "driving"), "driving");
 //                        BottomSheetFragmentRequeteFacturation bottomSheetFragmentBooking = new BottomSheetFragmentRequeteFacturation(getActivity(), departLocationReservation, destinationLocationReservation);
 //                        bottomSheetFragmentBooking.show(((FragmentActivity) context).getSupportFragmentManager(), bottomSheetFragmentBooking.getTag());
                     }

@@ -6,71 +6,80 @@ import android.os.AsyncTask
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
+import net.mbs.ybma.R
 import org.json.JSONObject
 import java.util.*
 
-class PointsParser(var context: Context?, private var directionMode: String, private var categorie: String)
-    : AsyncTask<String?, Int?, List<List<HashMap<String, String>>>?>(){
+class PointsParser(
+    mContext: Context,
+    directionMode: String,
+    categorie: String
+) :
+    AsyncTask<String, Int, List<List<HashMap<String, String>>>>() {
+    private var taskCallback: TaskLoadedCallback?=null
+    private var directionMode = "driving"
+    private var mContext:Context?=null
+    private var categorie :String?=null
 
-    var taskCallback: TaskLoadedCallback? = null
-
-    var mContext: Context? = null
-
-    fun PointsParser(
-        mContext: Context?,
-        directionMode: String,
-        categorie: String
-    ) {
-        taskCallback = mContext as TaskLoadedCallback?
+   init {
+        taskCallback = mContext as TaskLoadedCallback
         this.directionMode = directionMode
         this.mContext = mContext
         this.categorie = categorie
     }
 
-    override fun doInBackground(vararg params: String?): List<List<HashMap<String, String>>>? {
-        var jsonObject:JSONObject
+    // Parsing the data in non-ui thread
+    override fun doInBackground(vararg jsonData: String): List<List<HashMap<String, String>>>? {
+
+        val jObject: JSONObject
         var routes: List<List<HashMap<String, String>>>? = null
 
-        try{
-            jsonObject = JSONObject(params[0])
-            Log.d("mylog", params.get(0).toString())
-            val parser = DataParser(context!!)
+        try {
+            jObject = JSONObject(jsonData[0])
+            Log.d("mylog", jsonData[0])
+            val parser = DataParser(mContext)
             Log.d("mylog", parser.toString())
 
             // Starts parsing data
-            routes = parser.parse(jsonObject)
+            routes = parser.parse(jObject)
             Log.d("mylog", "Executing routes")
-            Log.d("mylog", routes.toString())
-        }catch (e:Exception){
+            Log.d("mylog", routes!!.toString())
+
+        } catch (e: Exception) {
             Log.d("mylog", e.toString())
             e.printStackTrace()
         }
+
         return routes
     }
 
-    // S'exécute dans le thread d'interface utilisateur, après le processus d'analyse
-    override fun onPostExecute(result: List<List<HashMap<String, String>>>?) {
-        var points: ArrayList<LatLng?>
+    // Executes in UI thread, after the parsing process
+    /**
+     * onPostExecute
+     *@param List<List<HasMap<String,String>>>
+     * @param result
+     */
+
+    override fun onPostExecute(result: List<List<HashMap<String, String>>>) {
+        var points: ArrayList<LatLng>
         var lineOptions: PolylineOptions? = null
         // Traversing through all the routes
-        // Traversing through all the routes
-        for (i in result!!.indices) {
+        for (i in result.indices) {
             points = ArrayList()
             lineOptions = PolylineOptions()
             // Fetching i-th route
-            val path =
-                result!![i]
+            val path = result[i]
             // Fetching all the points in i-th route
             for (j in path.indices) {
                 val point = path[j]
-                val lat = point["lat"]!!.toDouble()
-                val lng = point["lng"]!!.toDouble()
+                val lat = java.lang.Double.parseDouble(point["lat"]!!)
+                val lng = java.lang.Double.parseDouble(point["lng"]!!)
                 val position = LatLng(lat, lng)
                 points.add(position)
-                //                Log.i("location_polyline", lat+", "+lng);
             }
+
             if (categorie == "bottom_book") {
-               // BottomSheetFragmentBooking.points = points
+                //BottomSheetFragmentBooking.points = points
                // BottomSheetFragmentBooking.parseRouteDistance()
             }
             // Adding all the points in the route to LineOptions
@@ -79,20 +88,20 @@ class PointsParser(var context: Context?, private var directionMode: String, pri
                 lineOptions.width(10f)
                 lineOptions.color(Color.MAGENTA)
             } else {
-                lineOptions.width(20f)
-                lineOptions.color(Color.BLUE)
+                lineOptions.width(15f)
+                lineOptions.color(R.color.colorPrimaryDark)
+            }
+            // Drawing polyline in the Google Map for the i-th route
+            if (lineOptions != null) {
+                //mMap.addPolyline(lineOptions);
+                taskCallback!!.onTaskDone(lineOptions)
+
+            } else {
+                Log.d("mylog", "without Polylines drawn")
             }
             Log.d("mylog", "onPostExecute lineoptions decoded")
         }
 
-        // Drawing polyline in the Google Map for the i-th route
 
-        // Drawing polyline in the Google Map for the i-th route
-        if (lineOptions != null) {
-            //mMap.addPolyline(lineOptions);
-            taskCallback!!.onTaskDone(lineOptions)
-        } else {
-            Log.d("mylog", "without Polylines drawn")
-        }
     }
 }
