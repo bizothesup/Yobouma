@@ -2,34 +2,28 @@ package net.mbs.ybma
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.os.AsyncTask
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseTooManyRequestsException
-import com.google.firebase.auth.*
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import io.reactivex.Scheduler
-import io.reactivex.android.schedulers.AndroidSchedulers
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthProvider
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_login.*
 import net.mbs.ybma.commons.HelperCommon
 import net.mbs.ybma.commons.HelperUrl
 import net.mbs.ybma.commons.PrefManager
-import net.mbs.ybma.commons.SessionUser
 import net.mbs.ybma.models.User
 import net.mbs.ybma.retrofit.IUserClients
 import net.mbs.ybma.retrofit.RetrofitAppClient
 import net.mbs.ybma.retrofit.response.UserResponse
 import net.mbs.ybma.utils.CustomDialog
-import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -68,6 +62,7 @@ class LoginActivity : AppCompatActivity() {
         CustomDialog.progressDialog(this).dismiss()
         prefManager!!.setFirstTimeLaunch7(false)
         val intent = Intent(this@LoginActivity, HomeActivity::class.java)
+        intent.putExtra("fragment_name", "")
         startActivity(intent)
         finish()
     }

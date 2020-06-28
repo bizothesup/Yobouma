@@ -44,10 +44,14 @@ class HomeActivity : AppCompatActivity(), TaskLoadedCallback {
         activity = this
 
         prefManager = PrefManager(this)
-
+        val objetbundle = this.intent.extras
+        val fragment_name = objetbundle!!.getString("fragment_name")
         initToolbar()
         initNavigationMenu()
 
+        if(savedInstanceState==null){
+
+        }
     }
 
     private fun initToolbar() {
