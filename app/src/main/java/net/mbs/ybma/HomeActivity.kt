@@ -4,15 +4,15 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Menu
+import android.view.View
+import androidx.appcompat.app.ActionBar
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.navigation.findNavController
+import androidx.fragment.app.Fragment
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import androidx.navigation.ui.setupWithNavController
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
@@ -22,50 +22,69 @@ import net.mbs.ybma.assync.TaskLoadedCallback
 import net.mbs.ybma.commons.PrefManager
 import net.mbs.ybma.commons.SessionUser
 import net.mbs.ybma.fragment.ui.home.HomeFragment
+import net.mbs.ybma.utils.Tools
 
-class HomeActivity : AppCompatActivity() ,TaskLoadedCallback{
+class HomeActivity : AppCompatActivity(), TaskLoadedCallback {
 
- companion object{
-     private var context: Context? = null
-     var activity: Activity? = null
-     var prefManager: PrefManager? = null
- }
+    companion object {
+        var context: Context? = null
+        var activity: Activity? = null
+        var prefManager: PrefManager? = null
+    }
+
     private lateinit var appBarConfiguration: AppBarConfiguration
+    private var actionBar: ActionBar? = null
+    private var toolbar: Toolbar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
 
         context = this@HomeActivity
         activity = this
 
         prefManager = PrefManager(this)
 
+        initToolbar()
+        initNavigationMenu()
 
-
-        val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
-        val navView: NavigationView = findViewById(R.id.nav_view)
-        val navController = findNavController(R.id.nav_host_fragment)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        appBarConfiguration = AppBarConfiguration(setOf(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow), drawerLayout)
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.main, menu)
-        return true
+    private fun initToolbar() {
+        toolbar = findViewById<View>(R.id.toolbar) as Toolbar
+        setSupportActionBar(toolbar)
+        actionBar = supportActionBar
+        actionBar!!.setDisplayHomeAsUpEnabled(true)
+        actionBar!!.setHomeButtonEnabled(true)
+        actionBar!!.title = "Admin"
+        Tools.setSystemBarColor(this, R.color.colorPrimary)
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment)
-        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    private fun initNavigationMenu() {
+        val nav_view = findViewById<View>(R.id.nav_view) as NavigationView
+        val drawer = findViewById<View>(R.id.drawer_layout) as DrawerLayout
+        val toggle: ActionBarDrawerToggle = object : ActionBarDrawerToggle(
+            this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close
+        ) {
+            override fun onDrawerOpened(drawerView: View) {
+                super.onDrawerOpened(drawerView)
+            }
+        }
+        drawer.setDrawerListener(toggle)
+        toggle.syncState()
+
+        // open drawer at start
+        drawer.openDrawer(GravityCompat.START)
     }
+
+    //Chose fragement
+    fun selectItem(post: Int) {
+        var fragment: Fragment? = null
+        //val pos =
+        //var item:String
+
+    }
+
 
     override fun onTaskDone(vararg values: Any) {
         if (SessionUser.getUserCategorie(context!!).equals("client")
